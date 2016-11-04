@@ -20,6 +20,9 @@ class BaseTest:
         else:
             self.shortname = shortname[:self.shortlen]
 
+    def set_env(self, env):
+        self.environment = env
+        
     # fail reason
     def fail_reasons(self):
         return self.reasons
@@ -55,7 +58,7 @@ class BaseTest:
             time.sleep(0.1)
 
     def sha256sum(self, filename):
-        result = subprocess.run(['sha256sum', filename], capture_output=True)
+        result = subprocess.run(['sha256sum', filename], capture_output=True, env=self.environment)
         if result.returncode != 0:
             return None
         else:
@@ -64,7 +67,7 @@ class BaseTest:
     # was meant to be generic but weirdnesses in the jtag_gpio.py script has made this more specific than we'd like
     def run_nonblocking(self, oled, cmdline, reason, showerror=True, timeout=60, title=None):
         start_time = time.time()
-        proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize = 0)
+        proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize = 0, env=self.environment)
         while proc.poll() is None:
             line = proc.stderr.readline()
             with canvas(oled) as draw:
@@ -95,7 +98,7 @@ class BaseTest:
 
     # used primarily for EC programming, because you can't mux oled + EC as they share the SPI pins
     def run_blocking(self, oled, cmdline, reason, showerror=True, timeout=60):
-        result = subprocess.run(cmdline, capture_output=True, timeout=timeout)
+        result = subprocess.run(cmdline, capture_output=True, timeout=timeout, env=self.environment)
         if (result.returncode != 0) or (len(result.stderr) != 0):
             if showerror:
                 if oled == None: # special case when we're running an EC process that scrambles the OLED pins

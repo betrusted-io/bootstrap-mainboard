@@ -7,4 +7,5 @@ __all__ = ["BaseTest",
            "EcFirmware",
            "SocFirmware",
            "FpgaId",
+           "AudioBurn",
           ]
