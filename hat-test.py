@@ -3,7 +3,6 @@
 """
 Factory test script for the firmware-only burning station
 """
-
 import time # for sleep and timestamps
 from datetime import datetime # for deriving human-readable dates for logging
 import subprocess
@@ -34,6 +33,10 @@ def reset_tester_outputs():
     GPIO.output(GPIO_JTAG_TCK, 0)
     GPIO.output(GPIO_JTAG_TMS, 0)
     GPIO.output(GPIO_JTAG_TDI, 0)
+    
+    GPIO.output(HAT_RED_LED, 0)
+    GPIO.output(HAT_GREEN_LED, 0)
+    GPIO.output(HAT_WHITE_LED, 1)
 
 def check_tdi():
     passing = True
@@ -49,10 +52,6 @@ def check_tdi():
     return passing
 
 def render_result(code):
-    #####################
-    ##### TODO: add PASS/FAIL LED outputs
-    #####################
-    
     # alternate fast flashing if pass
     if code == True:
         for i in range(6):
@@ -198,10 +197,18 @@ def check_serial(port):
         passing = False
 
     return passing
-    
+
+def wait_start():
+    global HAT_RED_LED, HAT_GREEN_LED, HAT_WHITE_LED, HAT_START
+    while GPIO.input(HAT_START) == GPIO.HIGH:
+        time.sleep(0.1)
+    while GPIO.input(HAT_START) == GPIO.LOW:
+        time.sleep(0.1)
+
 def main():
     global GPIO_START, GPIO_FUNC, GPIO_BSIM, GPIO_ISENSE, GPIO_VBUS, GPIO_UART_SOC
     global GPIO_PROG_B, GPIO_AUD_HPR, GPIO_AUD_HPL, GPIO_AUD_SPK
+    global HAT_RED_LED, HAT_GREEN_LED, HAT_WHITE_LED, HAT_START
 
     parser = argparse.ArgumentParser(description="Precursor HAT Test")
     parser.add_argument(
@@ -233,26 +240,33 @@ def main():
     GPIO.setup(GPIO_JTAG_TMS, GPIO.OUT)
     GPIO.setup(GPIO_JTAG_TDO, GPIO.IN)
     GPIO.setup(GPIO_JTAG_TDI, GPIO.OUT)
+
+    GPIO.setup(HAT_RED_LED, GPIO.OUT)
+    GPIO.setup(HAT_GREEN_LED, GPIO.OUT)
+    GPIO.setup(HAT_WHITE_LED, GPIO.OUT)
+    GPIO.setup(HAT_START, GPIO.IN)
+
+    GPIO.output(HAT_GREEN_LED, 0)
+    GPIO.output(HAT_RED_LED, 0)
+    GPIO.output(HAT_WHITE_LED, 1)
     
     reset_tester_outputs()
 
     port = serial.Serial("/dev/ttyAMA0", baudrate=115200, timeout=0.5)
 
-    #####################
-    ##### TODO: add a "tester ready" LED output
-    #####################
-    
     test_status = True
     first_run = True
     while True:
         # this is at the top because we want the "continue" abort to print a message
         if first_run == False:
             if test_status == True:
+                GPIO.output(HAT_GREEN_LED, 1)
                 print("HAT test PASS")
                 if logfile:
                     logfile.write("{}: HAT test PASS\n".format(str(datetime.now())))
                     logfile.flush()
             else:
+                GPIO.output(HAT_RED_LED, 1)
                 print("HAT test FAIL:")
                 for reason in reasons:
                     print("  " + str(reason))
@@ -272,14 +286,14 @@ def main():
         reasons = []
         
         reset_tester_outputs()
+        GPIO.output(HAT_WHITE_LED, 1)
 
-        #####################
-        ##### TODO: replace this input with a button press on the test jig
-        #####################
-        input("Press enter to continue...")
-        #####################
-        ##### TODO: add a "test running" LED output
-        #####################
+        #input("Press enter to continue...")
+        wait_start()
+        # turn off the white LED to indicate the test is running
+        GPIO.output(HAT_WHITE_LED, 0)
+        GPIO.output(HAT_RED_LED, 0)
+        GPIO.output(HAT_GREEN_LED, 0)
         
         port.reset_input_buffer()
         port.reset_output_buffer()
