@@ -1,0 +1,6 @@
+[submodule "betrusted-scripts"]
+	path = betrusted-scripts
+	url = https://github.com/betrusted-io/betrusted-scripts.git
+[submodule "fomu-flash"]
+	path = fomu-flash
+	url = https://github.com/betrusted-io/fomu-flash.git
