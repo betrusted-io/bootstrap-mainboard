@@ -15,35 +15,24 @@ class Test(BaseTest):
     def run(self, oled):
         self.passing = True
         
+        with canvas(oled) as draw:
+            draw.text((0, 0), "VBUS on...", fill="white")
+            
         # turn on the power
         GPIO.output(GPIO_VBUS, 1)
         time.sleep(0.5) # wait for power to stabilize
 
         vbus = read_vbus()
 
-        ###############################
-        if vbus_min < 4.5:
+        if vbus < self.vbus_min_limit:
             self.passing = False
             self.add_reason("VBUS too low: {:.3f}V".format(vbus_min))
-        if vbus_max > 5.5:
+            GPIO.output(GPIO_VBUS, 0)
+        if vbus > self.vbus_max_limit:
             self.passing = False
             self.add_reason("VBUS too high: {:3.f}V".format(vbus_max))
-        ###############################
+            GPIO.output(GPIO_VBUS, 0)
         
-        with canvas(oled) as draw:
-            line = 0
-            draw.text((0, FONT_HEIGHT * line), "VBUS: {:.3f}V".format(vbus))
-            line += 1
-            draw.text((0, FONT_HEIGHT * line), "IBUS: {:.3f}mA".format(ibus * 1000))
-            line += 1
-            draw.text((0, FONT_HEIGHT * line), "IBAT: {:.3f}mA".format(ibat * 1000))
-            #line += 1
-            #draw.text((0, FONT_HEIGHT * line), "Press START to continue")
-
-        #while GPIO.input(GPIO_START) == GPIO.LOW:
-        #    time.sleep(0.1)
-        time.sleep(1.0)
-
         self.has_run = True
         return self.passing
         

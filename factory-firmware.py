@@ -20,14 +20,15 @@ oled=None  # global placeholder for the OLED device handle
 from tests import *
 from tests.BaseTest import BaseTest
 
-class Dummy(BaseTest):
-    def __init__(self):
-        BaseTest.__init__(self)
-
 def get_tests():
     tests = []
-    tests.append(PowerOn.Test())
-    tests.append(Dummy())
+    tests.append(BattOn.Test())
+    tests.append(VbusOn.Test())
+    
+    tests.append(Current.Test())
+    
+    tests.append(VbusOff.Test())
+    tests.append(BattOff.Test())
     return tests
 
 def makeint(i, base=10):
