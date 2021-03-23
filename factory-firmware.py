@@ -17,6 +17,19 @@ from adc128 import *
 
 oled=None  # global placeholder for the OLED device handle
 
+from tests.base import Test
+from tests.t_poweron import *
+
+class Dummy(Test):
+    def __init__(self):
+        Test.__init__(self)
+
+def get_tests():
+    tests = []
+    tests.append(PowerOn())
+    tests.append(Dummy())
+    return tests
+
 def makeint(i, base=10):
     try:
         return int(i, base=base)
@@ -83,6 +96,7 @@ def get_gitver():
     return (major, minor, rev, gitrev, gitextra, dirty)
 
 def abort_callback(channel):
+    reset_tester_outputs()
     # this should cause the loop to restart from the top, for now, we use it to exit
     print("Abort button pressed, quitting!".format(channel))
     oled.clear()
@@ -105,44 +119,45 @@ def reset_tester_outputs():
     GPIO.output(GPIO_AUD_HPL, 0)
     GPIO.output(GPIO_AUD_SPK, 0)
 
-def run_test():
-    global FONT_HEIGHT
-    global GPIO_START, GPIO_FUNC, GPIO_BSIM, GPIO_ISENSE, GPIO_VBUS, GPIO_UART_SOC
-    global GPIO_PROG_B, GPIO_AUD_HPR, GPIO_AUD_HPL, GPIO_AUD_SPK
+# tests is a list [] of tests
+def run_tests(tests):
     global oled
-    global ADC128_REG, ADC128_DEV0, ADC128_DEV1, ADC_CH
 
-    # turn on the power
-    GPIO.output(GPIO_VBUS, 1)
-    GPIO.output(GPIO_BSIM, 1)
-    time.sleep(0.5) # wait for power to stabilize
-    
-    oled.clear()
-    line = 0
-    for x in range(5, 0, -1):
-        with canvas(oled) as draw:
-            draw.text((0, FONT_HEIGHT * line), "Measuring current... {}".format(x), fill="white")
-            time.sleep(1.0)
-         
+    # reset the test state before running it
+    for test in tests:
+        test.reset()
+        
+    # run phase -- each test runs, and can draw onto the screen for status updates
+    # they return a simple pass/fail result, and if not passing, the full sequence aborts
+    for test in tests:
+        passed = test.run(oled)
+        if passed != True:
+            break
+
+    # print a summary screen
+    maxlines = 4
+    colwidth = 64
+    row = 0
+    col = 0
+    passing = True
     with canvas(oled) as draw:
-        vbus = read_vbus()
-        ibat = read_i_bat(high_range=True)
-        ibus = read_i_vbus()
-        line = 0
-        draw.text((0, FONT_HEIGHT * line), "VBUS: {:.3f}V".format(vbus))
-        line += 1
-        draw.text((0, FONT_HEIGHT * line), "IBUS: {:.3f}mA".format(ibus * 1000))
-        line += 1
-        draw.text((0, FONT_HEIGHT * line), "IBAT: {:.3f}mA".format(ibat * 1000))
-        line += 1
-        draw.text((0, FONT_HEIGHT * line), "Press START to continue")
+        oled.clear()
+        for test in tests:
+            draw.text((col * colwidth, FONT_HEIGHT * row), test.short_status())
+            if test.is_passing() != True:
+                passing = False
+            row += 1
+            if row >= maxlines:
+                row = 0
+                col += 1
 
-    # turn off the power
-    GPIO.output(GPIO_VBUS, 0)
-    GPIO.output(GPIO_BSIM, 0)
+        if passing:
+            draw.text((0, FONT_HEIGHT * 4), "Board is PASSING. Press START to continue.")
+        else:
+            draw.text((0, FONT_HEIGHT * 4), "Board has FAILED. Press START to continue.")
+
     while GPIO.input(GPIO_START) == GPIO.LOW:
         time.sleep(0.1)
-
     
 def main():
     global FONT_HEIGHT
@@ -169,6 +184,8 @@ def main():
     init_adc128(oled)
     
     GPIO.add_event_detect(GPIO_FUNC, GPIO.FALLING, callback=abort_callback)
+
+    tests = get_tests()
     
     loops = 0
     oled.show()
@@ -186,7 +203,7 @@ def main():
           time.sleep(0.1)
        loops += 1
        
-       run_test()
+       run_tests(tests)
     
 if __name__ == "__main__":
     try:
