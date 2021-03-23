@@ -17,16 +17,16 @@ from adc128 import *
 
 oled=None  # global placeholder for the OLED device handle
 
-from tests.base import Test
-from tests.t_poweron import *
+from tests import *
+from tests.BaseTest import BaseTest
 
-class Dummy(Test):
+class Dummy(BaseTest):
     def __init__(self):
-        Test.__init__(self)
+        BaseTest.__init__(self)
 
 def get_tests():
     tests = []
-    tests.append(PowerOn())
+    tests.append(PowerOn.Test())
     tests.append(Dummy())
     return tests
 
@@ -95,6 +95,12 @@ def get_gitver():
 
     return (major, minor, rev, gitrev, gitextra, dirty)
 
+def wait_start():
+    while GPIO.input(GPIO_START) == GPIO.LOW:
+        time.sleep(0.1)
+    while GPIO.input(GPIO_START) == GPIO.HIGH:
+        time.sleep(0.1)
+    
 def abort_callback(channel):
     reset_tester_outputs()
     # this should cause the loop to restart from the top, for now, we use it to exit
@@ -119,7 +125,7 @@ def reset_tester_outputs():
     GPIO.output(GPIO_AUD_HPL, 0)
     GPIO.output(GPIO_AUD_SPK, 0)
 
-# tests is a list [] of tests
+# tests is a list of tests
 def run_tests(tests):
     global oled
 
@@ -156,8 +162,23 @@ def run_tests(tests):
         else:
             draw.text((0, FONT_HEIGHT * 4), "Board has FAILED. Press START to continue.")
 
-    while GPIO.input(GPIO_START) == GPIO.LOW:
-        time.sleep(0.1)
+    wait_start()
+    
+    if passing != True:
+        with canvas(oled) as draw:
+            for test in tests:
+                if test.is_passing() != True:
+                    reasons = test.fail_reasons()
+                    line = 0
+                    for reason in reasons:
+                        draw.text((0, FONT_HEIGHT * line), reason)
+                        line += 1
+                        if line >= maxlines:
+                            break
+            draw.text((0, FONT_HEIGHT * 4), "Details listed. Press START to continue.")
+                        
+    wait_start()
+
     
 def main():
     global FONT_HEIGHT
@@ -199,8 +220,7 @@ def main():
           draw.text((0, FONT_HEIGHT * 1), "Tests run since last abort/restart: {}".format(loops), fill="white")
           draw.text((0, FONT_HEIGHT * 2), "Press START to continue...", fill="white")
 
-       while GPIO.input(GPIO_START) == GPIO.LOW:
-          time.sleep(0.1)
+       wait_start()
        loops += 1
        
        run_tests(tests)
