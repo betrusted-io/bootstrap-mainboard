@@ -26,11 +26,11 @@ class Test(BaseTest):
         vbus_min = 10.0
         ibat_max = 0.0
         ibus_max = 0.0
-        for x in range(20, 0, -1):
-            if x == 20 or x == 10 or x == 1:
+        for x in range(10, 0, -1):
+            if x == 10 or x == 5 or x == 1:
                 with canvas(oled) as draw:
-                    draw.text((0, FONT_HEIGHT * line), "Measuring current... {}".format(int(x/10)), fill="white")
-            time.sleep(0.1)
+                    draw.text((0, FONT_HEIGHT * line), "Measuring current... {}".format(int(x/5)), fill="white")
+            time.sleep(0.2)
             # sample
             vbus = read_vbus()
             ibat = read_i_bat(high_range=True)

@@ -6,6 +6,7 @@ Factory test script for the firmware-only burning station
 
 import time
 import subprocess
+import atexit
 from luma.core.render import canvas
 from luma.core.interface.serial import bitbang
 import RPi.GPIO as GPIO
@@ -24,8 +25,9 @@ def get_tests():
     tests = []
     tests.append(BattOn.Test())
     tests.append(VbusOn.Test())
-    
     tests.append(Current.Test())
+    
+    tests.append(EcFirmware.Test())
     
     tests.append(VbusOff.Test())
     tests.append(BattOff.Test())
@@ -112,8 +114,7 @@ def abort_callback(channel):
     with canvas(oled) as draw:
        draw.text((0, FONT_HEIGHT * 0), "Tester version {}.{} {:x}+{}".format(major, minor, gitrev, gitextra), fill="white")
        draw.text((0, FONT_HEIGHT * 2), "Quit pressed, no program running.", fill="white")
-    time.sleep(0.2)
-    GPIO.cleanup()
+    time.sleep(3)
     exit(0)
 
 def reset_tester_outputs():
@@ -225,13 +226,16 @@ def main():
        loops += 1
        
        run_tests(tests)
+
+def cleanup():
+    reset_tester_outputs()
+    GPIO.cleanup()
     
 if __name__ == "__main__":
+    atexit.register(cleanup)
     try:
         print("Tester main loop starting...")
         oled = ssd1322(bitbang(SCLK=11, SDA=10, CE=7, DC=1, RST=12))
         main()
     except KeyboardInterrupt:
         pass
-        
-    GPIO.cleanup()
