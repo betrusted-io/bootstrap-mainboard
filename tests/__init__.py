@@ -1,1 +1,1 @@
-__all__ = ["BaseTest", "VbusOn", "BattOn", "VbusOff", "BattOff", "Current", "EcFirmware"]
+__all__ = ["BaseTest", "VbusOn", "BattOn", "VbusOff", "BattOff", "Current", "EcFirmware", "SocFirmware"]

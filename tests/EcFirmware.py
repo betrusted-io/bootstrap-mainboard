@@ -80,19 +80,13 @@ class Test(BaseTest):
                reason="EC reboot failure", timeout=10):
             return self.passing
 
-        ### this code is bad because you can't draw to the OLED while flashing
-        #process = subprocess.Popen(['sudo', 'fomu-flash/fomu-flash', '-w', self.wfx_firmware, '-a', '0x9C000'], stdout=subprocess.PIPE)
-        #for line in iter(process.stdout.readline, b''):
-        #    with canvas(oled) as draw:
-        #        draw.text((0, 0), line, fill="white")
-
         oled.cleanup()
         oled = ssd1322(bitbang(SCLK=11, SDA=10, CE=7, DC=1, RST=12))
         with canvas(oled) as draw:
             draw.text((0, 0), "EC burning complete!", fill="white")
         time.sleep(1)
-        with canvas(oled) as draw:
-            oled.clear()
+        oled.clear()
+        time.sleep(0.2)
         
         return self.passing
     

@@ -28,7 +28,9 @@ def get_tests():
     tests.append(Current.Test())
     
     tests.append(EcFirmware.Test())
+    tests.append(SocFirmware.Test())
     
+    tests.append(Current.Test())
     tests.append(VbusOff.Test())
     tests.append(BattOff.Test())
     return tests
@@ -118,11 +120,14 @@ def abort_callback(channel):
     exit(0)
 
 def reset_tester_outputs():
+    # tristates
+    GPIO.setup(GPIO_PROG_B, GPIO.IN)
+    GPIO.setup(GPIO_CRESET_N, GPIO.IN)
+    # driven
     GPIO.output(GPIO_VBUS, 0)
     GPIO.output(GPIO_BSIM, 0)
     GPIO.output(GPIO_ISENSE, 1)
     GPIO.output(GPIO_UART_SOC, 1)
-    GPIO.output(GPIO_PROG_B, 1)
     GPIO.output(GPIO_AUD_HPR, 0)
     GPIO.output(GPIO_AUD_HPL, 0)
     GPIO.output(GPIO_AUD_SPK, 0)
@@ -198,7 +203,8 @@ def main():
     GPIO.setup(GPIO_BSIM, GPIO.OUT)
     GPIO.setup(GPIO_ISENSE, GPIO.OUT)
     GPIO.setup(GPIO_UART_SOC, GPIO.OUT)
-    GPIO.setup(GPIO_PROG_B, GPIO.OUT)
+    GPIO.setup(GPIO_PROG_B, GPIO.IN)
+    GPIO.setup(GPIO_CRESET_N, GPIO.IN)
     GPIO.setup(GPIO_AUD_HPR, GPIO.OUT)
     GPIO.setup(GPIO_AUD_HPL, GPIO.OUT)
     GPIO.setup(GPIO_AUD_SPK, GPIO.OUT)

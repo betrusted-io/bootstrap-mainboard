@@ -1,4 +1,5 @@
 import time
+import io
 import subprocess
 from luma.core.render import canvas
 from luma.core.interface.serial import bitbang
@@ -50,6 +51,38 @@ class BaseTest:
         while GPIO.input(GPIO_START) == GPIO.HIGH:
             time.sleep(0.1)
 
+    def run_nonblocking(self, oled, cmdline, reason, showerror=True, timeout=60, title=None):
+        start_time = time.time()
+        proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize = 0)
+        while proc.poll() is None:
+            line = proc.stderr.readline()
+            with canvas(oled) as draw:
+                if title:
+                    draw.text((0, 0), title, fill="white")
+                draw.text((0, FONT_HEIGHT), line, fill="white")
+            if time.time() - start_time > timeout:
+                self.passing = False
+                proc.kill()
+                self.reasons.append("[Timeout] " + reason)
+                if showerror:
+                   with canvas(oled) as draw:
+                      draw.text((0, FONT_HEIGHT*0), reason, fill="white")
+                      draw.text((0, FONT_HEIGHT*1), "Operation timeout!", fill="white")
+                      self.wait_start()
+                return self.passing
+        if proc.poll() != 0:
+            if showerror:
+               with canvas(oled) as draw:
+                  draw.text((0, FONT_HEIGHT*0), reason, fill="white")
+                  draw.text((0, FONT_HEIGHT*1), "Did not complete!", fill="white")
+                  self.wait_start()
+            self.passing = False
+            proc.kill()
+            self.reasons.append(reason)
+            return self.passing
+        return self.passing
+
+    # used primarily for EC programming, because you can't mux oled + EC as they share the SPI pins
     def run_blocking(self, oled, cmdline, reason, showerror=True, timeout=60):
         result = subprocess.run(cmdline, capture_output=True, timeout=timeout)
         if (result.returncode != 0) or (len(result.stderr) != 0):
