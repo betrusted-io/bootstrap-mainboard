@@ -14,6 +14,7 @@ class BaseTest:
         self.name = name
         self.shortlen = 6
         self.reasons = []
+        self.start = time.time()
         if shortname == None:
             self.shortname = name[:self.shortlen]
         else:
@@ -40,10 +41,12 @@ class BaseTest:
     def has_run(self):
         return self.has_run
 
-    def reset(self):
+    def reset(self, logfile=None):
         self.passing = False
         self.has_run = False
         self.reasons = []
+        self.start = time.time()
+        self.logfile = logfile
 
     def wait_start(self):
         while GPIO.input(GPIO_START) == GPIO.LOW:
@@ -51,6 +54,14 @@ class BaseTest:
         while GPIO.input(GPIO_START) == GPIO.HIGH:
             time.sleep(0.1)
 
+    def sha256sum(self, filename):
+        result = subprocess.run(['sha256sum', filename], capture_output=True)
+        if result.returncode != 0:
+            return None
+        else:
+            return result.stdout.decode("utf-8")
+
+    # was meant to be generic but weirdnesses in the jtag_gpio.py script has made this more specific than we'd like
     def run_nonblocking(self, oled, cmdline, reason, showerror=True, timeout=60, title=None):
         start_time = time.time()
         proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize = 0)
@@ -104,6 +115,10 @@ class BaseTest:
         self.wait_start()
         with canvas(oled) as draw:
             oled.clear()
+        if self.logfile:
+            self.logfile.write("display_error detail: \n")
+            self.logfile.write(stdout.decode("utf-8"))
+            self.logfile.write(stderr.decode("utf-8"))
             
     def run(self, oled):
         with canvas(oled) as draw:

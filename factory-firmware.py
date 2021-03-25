@@ -4,9 +4,11 @@
 Factory test script for the firmware-only burning station
 """
 
-import time
+import time # for sleep and timestamps
+from datetime import datetime # for deriving human-readable dates for logging
 import subprocess
 import atexit
+import argparse
 from luma.core.render import canvas
 from luma.core.interface.serial import bitbang
 import RPi.GPIO as GPIO
@@ -27,6 +29,7 @@ def get_tests():
     tests.append(VbusOn.Test())
     tests.append(Current.Test())
     
+    tests.append(FpgaId.Test())
     tests.append(EcFirmware.Test())
     tests.append(SocFirmware.Test())
     
@@ -133,19 +136,23 @@ def reset_tester_outputs():
     GPIO.output(GPIO_AUD_SPK, 0)
 
 # tests is a list of tests
-def run_tests(tests):
+def run_tests(tests, logfile=None):
     global oled
 
-    # reset the test state before running it
-    for test in tests:
-        test.reset()
-        
-    # run phase -- each test runs, and can draw onto the screen for status updates
+    elapsed_start = time.time()
+    # each test runs, and can draw onto the screen for status updates
     # they return a simple pass/fail result, and if not passing, the full sequence aborts
     for test in tests:
+        test.reset(logfile)     # reset the test state before running it. this also resets the start timer.
         passed = test.run(oled)
+        with canvas(oled) as draw:
+            draw.text((0, FONT_HEIGHT * 4), "Test: {:.2f}s Total: {:.2f}s".format(time.time() - test.start, time.time() - elapsed_start))
+        time.sleep(0.5)
+        if logfile:
+            logfile.flush()
         if passed != True:
             break
+    elapsed = time.time() - elapsed_start
 
     # print a summary screen
     maxlines = 4
@@ -165,13 +172,23 @@ def run_tests(tests):
                 col += 1
 
         if passing:
-            draw.text((0, FONT_HEIGHT * 4), "Board is PASSING. Press START to continue.")
+            note = "PASS. Ran for {:.2f}s. Press START.".format(elapsed)
         else:
-            draw.text((0, FONT_HEIGHT * 4), "Board has FAILED. Press START to continue.")
+            note = "FAIL. Ran for {:.2f}s. Press START.".format(elapsed)
+        draw.text((0, FONT_HEIGHT * 4), note)
+        if logfile:
+            logfile.write(note + "\n")
+            logfile.flush()
 
     wait_start()
     
     if passing != True:
+        if logfile:
+            reasons = test.fail_reasons()
+            logfile.write("Fail reasons given:\n")
+            for reason in reasons:
+                logfile.write(reason + "\n")
+            logfile.flush()
         with canvas(oled) as draw:
             for test in tests:
                 if test.is_passing() != True:
@@ -194,6 +211,17 @@ def main():
     global oled
     global ADC128_REG, ADC128_DEV0, ADC128_DEV1, ADC_CH
 
+    parser = argparse.ArgumentParser(description="Precursor Factory Test")
+    parser.add_argument(
+        "-l", "--log", help="When present, suppress log output to /home/pi/log/", default=True, action="store_false"
+    )
+    args = parser.parse_args()
+
+    if args.log:
+        logfile = open('/home/pi/log/{:%Y%b%d_%H-%M-%S}.log'.format(datetime.now()), 'w')
+    else:
+        logfile = None
+    
     GPIO.setmode(GPIO.BCM)
     
     GPIO.setup(GPIO_START, GPIO.IN)
@@ -230,8 +258,12 @@ def main():
 
        wait_start()
        loops += 1
+       if logfile:
+           logfile.write("------------------------------------------------------------------\n".format(loops, str(datetime.now())))
+           logfile.write("Starting run {} at {}\n".format(loops, str(datetime.now())))
+           logfile.flush()
        
-       run_tests(tests)
+       run_tests(tests, logfile=logfile)
 
 def cleanup():
     reset_tester_outputs()

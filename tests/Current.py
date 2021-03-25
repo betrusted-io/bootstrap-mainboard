@@ -5,6 +5,7 @@ import RPi.GPIO as GPIO
 from tests.BaseTest import BaseTest
 from gpiodefs import *
 from adc128 import *
+from datetime import datetime
 
 class Test(BaseTest):
     def __init__(self, ibat_limit=250, ibus_limit=800, vbus_min_limit=4.5, vbus_max_limit=5.5):
@@ -66,6 +67,12 @@ class Test(BaseTest):
             draw.text((0, FONT_HEIGHT * line), "IBAT: {:.3f}mA".format(ibat * 1000))
             #line += 1
             #draw.text((0, FONT_HEIGHT * line), "Press START to continue")
+            
+        if self.logfile:
+            self.logfile.write("Current measured at {}\n".format(str(datetime.now())))
+            self.logfile.write("VBUS: {:.3f}V\n".format(vbus))
+            self.logfile.write("IBUS: {:.3f}mA\n".format(ibus * 1000))
+            self.logfile.write("IBAT: {:.3f}mA\n".format(ibat * 1000))
 
         time.sleep(1.0)
 

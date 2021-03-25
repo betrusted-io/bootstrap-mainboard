@@ -56,6 +56,11 @@ class Test(BaseTest):
         time.sleep(1)
         with canvas(oled) as draw:
             oled.clear()
+
+        if self.logfile:
+            self.logfile.write(self.sha256sum(self.fpga))
+            self.logfile.write(self.sha256sum(self.loader))
+            self.logfile.write(self.sha256sum(self.kernel))
         
         return self.passing
     

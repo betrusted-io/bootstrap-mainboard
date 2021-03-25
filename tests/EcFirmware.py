@@ -87,6 +87,10 @@ class Test(BaseTest):
         time.sleep(1)
         oled.clear()
         time.sleep(0.2)
+
+        if self.logfile:
+            self.logfile.write(self.sha256sum(self.wfx_firmware))
+            self.logfile.write(self.sha256sum(self.ec_firmware))
         
         return self.passing
     
