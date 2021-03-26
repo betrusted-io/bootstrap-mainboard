@@ -225,9 +225,11 @@ def run_tests(tests, logfile=None):
 
 def do_shutdown():
     with canvas(oled) as draw:
-        draw.text((0, FONT_HEIGHT * 0), "Shutting down, please wait 30 seconds.")
+        draw.text((0, FONT_HEIGHT * 0), "Shutting down, please wait ~30 seconds.")
         draw.text((0, FONT_HEIGHT * 1), "Remove power after the green LED on the")
-        draw.text((0, FONT_HEIGHT * 2), "Raspberry Pi blinks, then turns off.")
+        draw.text((0, FONT_HEIGHT * 2), "Raspberry Pi blinks ten times, stays on")
+        draw.text((0, FONT_HEIGHT * 3), "for a moment, then turns off.")
+        draw.text((0, FONT_HEIGHT * 4), "The red LED will continue to stay on.")
     subprocess.run(['sudo', 'shutdown', '-h', 'now'])
     time.sleep(15)
 
