@@ -35,6 +35,8 @@ def get_ip_address(ifname):
          return None
 
 oled=None  # global placeholder for the OLED device handle
+IN_PROGRESS=False # set to true if a test is in progress
+MENU_MODE=False
 
 from tests import *
 from tests.BaseTest import BaseTest
@@ -126,17 +128,19 @@ def wait_start():
         time.sleep(0.1)
     
 def abort_callback(channel):
-    reset_tester_outputs()
-    # this should cause the loop to restart from the top, for now, we use it to exit
-    print("Abort button pressed, quitting!".format(channel))
-    oled.clear()
-    time.sleep(0.2)
-    (major, minor, rev, gitrev, gitextra, dirty) = get_gitver()
-    with canvas(oled) as draw:
-       draw.text((0, FONT_HEIGHT * 0), "Tester version {}.{} {:x}+{}".format(major, minor, gitrev, gitextra), fill="white")
-       draw.text((0, FONT_HEIGHT * 2), "Quit pressed, no program running.", fill="white")
-    time.sleep(3)
-    exit(0)
+    global IN_PROGRESS
+    global MENU_MODE
+
+    if IN_PROGRESS:
+        print("Abort button pressed, quitting!".format(channel))
+        oled.clear()
+        reset_tester_outputs()
+        exit(0)
+    else:
+         # test is not in progress, flag to menu mode
+         while GPIO.input(GPIO_FUNC) == GPIO.LOW: # wait for button to be let go
+              time.sleep(0.1)
+         MENU_MODE=True
 
 def reset_tester_outputs():
     # tristates
@@ -219,6 +223,69 @@ def run_tests(tests, logfile=None):
                         
     wait_start()
 
+def do_shutdown():
+    with canvas(oled) as draw:
+        draw.text((0, FONT_HEIGHT * 0), "Shutting down, please wait 30 seconds.")
+        draw.text((0, FONT_HEIGHT * 1), "Remove power after the green LED on the")
+        draw.text((0, FONT_HEIGHT * 2), "Raspberry Pi blinks, then turns off.")
+    subprocess.run(['sudo', 'shutdown', '-h', 'now'])
+    time.sleep(15)
+
+def do_update():
+    with canvas(oled) as draw:
+        draw.text((0, FONT_HEIGHT * 0), "Updates not yet implemented!")
+        draw.text((0, FONT_HEIGHT * 1), "Check back later.")
+    time.sleep(3)
+
+def do_return():
+     pass
+
+def draw_menu(oled, menu_items, selected):
+    with canvas(oled) as draw:
+         line = 0
+         for (text, func) in menu_items:
+             if line == selected:
+                draw.text((0, FONT_HEIGHT * line), "> " + text)
+             else:
+                draw.text((0, FONT_HEIGHT * line), "  " + text)
+             line = line + 1
+
+         draw.text((0, FONT_HEIGHT * 4), "FUNC to change, START to select." )
+
+     
+def do_menu():
+    global FONT_HEIGHT
+    global oled
+    global MENU_MODE
+
+    MENU_MODE = False
+
+    menu_items = [
+         ("Return to main screen", do_return),
+         ("Shutdown", do_shutdown ),
+         ("Update", do_update ),
+    ]
+    
+    oled.clear()
+    selected = 0
+    line = 0
+    draw_menu(oled, menu_items, selected)
+    while True:
+        if GPIO.input(GPIO_START) == GPIO.HIGH:
+            break
+        if MENU_MODE == True:
+             MENU_MODE = False
+             selected = (selected + 1) % len(menu_items)
+             draw_menu(oled, menu_items, selected)
+        time.sleep(0.1)
+        
+    # wait for the operator to let go of the switch
+    while GPIO.input(GPIO_START) == GPIO.HIGH:
+        time.sleep(0.1)
+
+    (text, func) = menu_items[selected]
+    func()
+    MENU_MODE = False
     
 def main():
     global FONT_HEIGHT
@@ -226,6 +293,8 @@ def main():
     global GPIO_PROG_B, GPIO_AUD_HPR, GPIO_AUD_HPL, GPIO_AUD_SPK
     global oled
     global ADC128_REG, ADC128_DEV0, ADC128_DEV1, ADC_CH
+    global IN_PROGRESS
+    global MENU_MODE
 
     parser = argparse.ArgumentParser(description="Precursor Factory Test")
     parser.add_argument(
@@ -234,7 +303,10 @@ def main():
     args = parser.parse_args()
 
     if args.log:
-        logfile = open('/home/pi/log/{:%Y%b%d_%H-%M-%S}.log'.format(datetime.now()), 'w')
+        try:
+             logfile = open('/home/pi/log/{:%Y%b%d_%H-%M-%S}.log'.format(datetime.now()), 'w')
+        except:
+             logfile = None # don't crash if the fs is full, the show must go on!
     else:
         logfile = None
     
@@ -265,19 +337,35 @@ def main():
 
     while True:
        reset_tester_outputs()
+       IN_PROGRESS=False
        oled.clear()
        (major, minor, rev, gitrev, gitextra, dirty) = get_gitver()
-       with canvas(oled) as draw:
-          draw.text((0, FONT_HEIGHT * 0), "Tester version {}.{} {:x}+{}".format(major, minor, gitrev, gitextra), fill="white")
-          draw.text((0, FONT_HEIGHT * 1), "Tests run since last abort/restart: {}".format(loops), fill="white")
-          draw.text((0, FONT_HEIGHT * 2), "Press START to continue...", fill="white")
-          ipaddr = get_ip_address(b'eth0')
-          if ipaddr != None:
-              draw.text((0, FONT_HEIGHT * 4), "LAN IP address: {}".format(ipaddr), fill="white")
-          else:
-              draw.text((0, FONT_HEIGHT * 4), "LAN cable unplugged or network error!")
+       elapsed = time.time()
+       while True:
+           if MENU_MODE == False:
+               if GPIO.input(GPIO_START) == GPIO.HIGH:
+                    IN_PROGRESS=True
+                    break;
+               if time.time() - elapsed > 1.0:
+                    elapsed = time.time()
+                    with canvas(oled) as draw:
+                       draw.text((0, FONT_HEIGHT * 0), "Tester version {}.{} {:x}+{}".format(major, minor, gitrev, gitextra), fill="white")
+                       draw.text((0, FONT_HEIGHT * 1), "Tests run since last abort/restart: {}".format(loops), fill="white")
+                       draw.text((0, FONT_HEIGHT * 2), ">>>>> Press START to run test <<<<<", fill="white")
+                       draw.text((0, FONT_HEIGHT * 3), "{}".format(str(datetime.now())), fill="white")
+                       ipaddr = get_ip_address(b'eth0')
+                       if ipaddr != None:
+                           draw.text((0, FONT_HEIGHT * 4), "LAN IP address: {}".format(ipaddr), fill="white")
+                       else:
+                           draw.text((0, FONT_HEIGHT * 4), "*** ERROR: Check LAN cable or Internet! ***")
+               time.sleep(0.2)
+           else:
+                do_menu()
 
-       wait_start()
+       # wait for the operator to let go of the switch
+       while GPIO.input(GPIO_START) == GPIO.HIGH:
+           time.sleep(0.1)
+                  
        loops += 1
        if logfile:
            logfile.write("------------------------------------------------------------------\n".format(loops, str(datetime.now())))
