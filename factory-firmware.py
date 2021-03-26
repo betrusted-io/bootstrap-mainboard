@@ -18,6 +18,22 @@ import luma.oled.device
 from gpiodefs import *
 from adc128 import *
 
+# all this plumbing, just to get my IP address. :-P
+import os
+import socket
+import fcntl
+import struct
+def get_ip_address(ifname):
+     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+     try:
+         addr = socket.inet_ntoa(fcntl.ioctl(
+            s.fileno(),
+            0x8915, # SIOCGIFADDR
+            struct.pack('256s', ifname[:15]) )[20:24])
+         return addr
+     except:
+         return None
+
 oled=None  # global placeholder for the OLED device handle
 
 from tests import *
@@ -255,6 +271,11 @@ def main():
           draw.text((0, FONT_HEIGHT * 0), "Tester version {}.{} {:x}+{}".format(major, minor, gitrev, gitextra), fill="white")
           draw.text((0, FONT_HEIGHT * 1), "Tests run since last abort/restart: {}".format(loops), fill="white")
           draw.text((0, FONT_HEIGHT * 2), "Press START to continue...", fill="white")
+          ipaddr = get_ip_address(b'eth0')
+          if ipaddr != None:
+              draw.text((0, FONT_HEIGHT * 4), "LAN IP address: {}".format(ipaddr), fill="white")
+          else:
+              draw.text((0, FONT_HEIGHT * 4), "LAN cable unplugged or network error!")
 
        wait_start()
        loops += 1
