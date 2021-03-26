@@ -233,7 +233,14 @@ def do_shutdown():
     subprocess.run(['sudo', 'shutdown', '-h', 'now'])
     time.sleep(15)
 
+############################# TODO ##########################
 def do_update():
+    # note to self:
+    # updates are done with a 'git pull origin main' and then a 'git submodule update'
+    # however we also need to handle the case that the branch was left in a weird state...?
+    # would also be nice to relay the subprocess.run() outputs to the screen somehow for review & confirmation
+    # and also finally end with a screen that shows the sha2sum of the main script plus key files, so
+    # that the factory can take a photo of it and I can confirm things are in fact up to date.
     with canvas(oled) as draw:
         draw.text((0, FONT_HEIGHT * 0), "Updates not yet implemented!")
         draw.text((0, FONT_HEIGHT * 1), "Check back later.")
