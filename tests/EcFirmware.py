@@ -69,6 +69,9 @@ class Test(BaseTest):
                reason="EC main firmware verify failure", timeout=10):
             return self.passing
 
+        # disable the UP5K drive explicitly to make sure we aren't intefering with normal operation
+        GPIO.output(GPIO_DRV_UP5K_N, 1)
+        
         oled.cleanup()
         oled = ssd1322(bitbang(SCLK=11, SDA=10, CE=7, DC=1, RST=12))
         with canvas(oled) as draw:
