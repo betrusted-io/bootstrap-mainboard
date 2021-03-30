@@ -154,6 +154,7 @@ def reset_tester_outputs():
     GPIO.output(GPIO_AUD_HPR, 0)
     GPIO.output(GPIO_AUD_HPL, 0)
     GPIO.output(GPIO_AUD_SPK, 0)
+    GPIO.output(GPIO_DRV_UP5K_N, 1)
 
 # tests is a list of tests
 def run_tests(tests, logfile=None):
@@ -333,6 +334,7 @@ def main():
     GPIO.setup(GPIO_AUD_HPR, GPIO.OUT)
     GPIO.setup(GPIO_AUD_HPL, GPIO.OUT)
     GPIO.setup(GPIO_AUD_SPK, GPIO.OUT)
+    GPIO.setup(GPIO_DRV_UP5K_N, GPIO.OUT)
     reset_tester_outputs()
 
     init_adc128(oled)
