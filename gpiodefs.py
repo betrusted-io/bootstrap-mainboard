@@ -10,3 +10,14 @@ GPIO_CRESET_N=25 # when low, the EC reset line is asserted
 GPIO_AUD_HPR=0  # when high, the right headphone is looped back to the mic
 GPIO_AUD_HPL=5  # when high, the left headphone is looped back to the mic
 GPIO_AUD_SPK=26 # when high, the speaker output is looped back to the mic
+
+GPIO_DRV_UP5K_N=23
+GPIO_UP5K_MOSI=10
+GPIO_UP5K_MISO=9
+GPIO_UP5K_SCK=11
+GPIO_UP5K_CSN=8
+
+GPIO_JTAG_TCK=4
+GPIO_JTAG_TMS=17
+GPIO_JTAG_TDI=27
+GPIO_JTAG_TDO=22
