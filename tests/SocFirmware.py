@@ -9,7 +9,7 @@ from gpiodefs import *
 import sys
 
 class Test(BaseTest):
-    def __init__(self, fpga="precursors/encrypted.bin",
+    def __init__(self, fpga="precursors/soc_csr.bin",
                  loader="precursors/loader.bin", kernel="precursors/xous.img"):
         BaseTest.__init__(self, name="SoC Firmware", shortname="FPGApr")
         self.fpga = fpga
