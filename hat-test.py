@@ -249,10 +249,18 @@ def main():
         if first_run == False:
             if test_status == True:
                 print("HAT test PASS")
+                if logfile:
+                    logfile.write("{}: HAT test PASS\n".format(str(datetime.now())))
+                    logfile.flush()
             else:
                 print("HAT test FAIL:")
                 for reason in reasons:
                     print("  " + str(reason))
+                if logfile:
+                    logfile.write("{}: HAT test FAIL\n".format(str(datetime.now())))
+                    for reason in reasons:
+                        logfile.write("  {}\n".format(str(reason)))
+                    logfile.flush()
             render_result(test_status)
             
             ##### power off the device
