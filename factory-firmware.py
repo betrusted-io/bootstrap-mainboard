@@ -49,6 +49,13 @@ def get_tests():
     
     tests.append(FpgaId.Test())
     tests.append(EcFirmware.Test())
+
+    # power cycle before FPGA burn
+    tests.append(VbusOff.Test())
+    tests.append(BattOff.Test())
+    tests.append(BattOn.Test())
+    tests.append(VbusOn.Test())
+    
     tests.append(SocFirmware.Test())
     
     tests.append(Current.Test())
