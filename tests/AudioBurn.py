@@ -19,12 +19,12 @@ class Test(BaseTest):
     def reset_board(self, oled):
         GPIO.setup(GPIO_PROG_B, GPIO.OUT)
         GPIO.output(GPIO_PROG_B, 0)
-        time.sleep(1.5)
+        time.sleep(1.0)
         with canvas(oled) as draw:
             draw.text((0, 0), "Resetting SoC...", fill="white")
         GPIO.output(GPIO_PROG_B, 1)
-        GPIO.setup(GPIO_PROG_B, GPIO.IN)
-        time.sleep(4.0)
+        #GPIO.setup(GPIO_PROG_B, GPIO.IN)
+        time.sleep(6.0)
         
     def run_wishbone(self, oled, cmdline, reason, showerror=True, timeout=60, title=None):
         passing = True
@@ -35,6 +35,8 @@ class Test(BaseTest):
         while proc.poll() is None:
             line = proc.stdout.readline()
             #print(line)
+            if self.logfile and ~(("writing" in line) or ("erasing" in line)):
+                self.logfile.write(line)
             with canvas(oled) as draw:
                 if title:
                     draw.text((0, 0), title, fill="white")
