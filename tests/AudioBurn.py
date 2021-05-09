@@ -35,7 +35,7 @@ class Test(BaseTest):
         while proc.poll() is None:
             line = proc.stdout.readline()
             #print(line)
-            if self.logfile and ~(("writing" in line) or ("erasing" in line)):
+            if self.logfile:
                 self.logfile.write(line)
             with canvas(oled) as draw:
                 if title:
