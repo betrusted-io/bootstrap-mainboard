@@ -56,6 +56,7 @@ def get_tests():
     tests.append(BattOn.Test())
     tests.append(VbusOn.Test())
     
+    tests.append(AudioBurn.Test())
     tests.append(SocFirmware.Test())
     
     tests.append(Current.Test())
