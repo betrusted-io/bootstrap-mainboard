@@ -47,17 +47,17 @@ def get_tests():
     tests.append(VbusOn.Test())
     tests.append(Current.Test())
     
-    tests.append(FpgaId.Test())
-    tests.append(EcFirmware.Test())
+    if True:
+       tests.append(FpgaId.Test())
+       tests.append(EcFirmware.Test())
 
-    # power cycle before FPGA burn
-    tests.append(VbusOff.Test())
-    tests.append(BattOff.Test())
-    tests.append(BattOn.Test())
-    tests.append(VbusOn.Test())
-    
-    tests.append(AudioBurn.Test())
-    tests.append(SocFirmware.Test())
+       # power cycle before FPGA burn
+       tests.append(VbusOff.Test())
+       tests.append(BattOff.Test())
+       tests.append(BattOn.Test())
+       tests.append(VbusOn.Test())
+       tests.append(SocFirmware.Test())
+       tests.append(AudioBurn.Test())
     
     tests.append(Current.Test())
     tests.append(VbusOff.Test())
