@@ -31,6 +31,7 @@ class Test(BaseTest):
         time.sleep(1)
         
     def run_wishbone(self, oled, cmdline, reason, showerror=True, timeout=60, title=None):
+        passing = True
         with canvas(oled) as draw:
             draw.text((0, 0), "Burning {}".format(title), fill="white")
         start_time = time.time()
@@ -42,7 +43,7 @@ class Test(BaseTest):
                     draw.text((0, 0), title, fill="white")
                 draw.text((0, FONT_HEIGHT), line[29:], fill="white") # skip redundant chars
             if time.time() - start_time > timeout:
-                self.passing = False
+                passing = False
                 proc.kill()
                 self.reasons.append("[Timeout] " + reason)
                 if showerror:
@@ -50,18 +51,18 @@ class Test(BaseTest):
                       draw.text((0, FONT_HEIGHT*0), reason, fill="white")
                       draw.text((0, FONT_HEIGHT*1), "Operation timeout!", fill="white")
                       self.wait_start()
-                return self.passing
+                return passing
         if proc.poll() != 0:
             if showerror:
                with canvas(oled) as draw:
                   draw.text((0, FONT_HEIGHT*0), reason, fill="white")
                   draw.text((0, FONT_HEIGHT*1), "Did not complete!", fill="white")
                   self.wait_start()
-            self.passing = False
+            passing = False
             proc.kill()
             self.reasons.append(reason)
-            return self.passing
-        return self.passing
+            return passing
+        return passing
         
     def run(self, oled):
         self.passing = True
@@ -73,14 +74,14 @@ class Test(BaseTest):
         if False == self.run_wishbone(oled,
                ['sudo', 'wishbone-tool', '--load-name', self.short8, '--load-address', '0x6000000', '--load-flash', "--force-term"],
                reason="Short sample burn failure", timeout=60, title='Short WAV burn:'):
-            return self.passing
+            return False
 
         self.reset_board(oled)
         
         if False == self.run_wishbone(oled,
                ['sudo', 'wishbone-tool', '--load-name', self.long8, '--load-address', '0x6340000', '--load-flash', "--force-term", "--no-verify"],
-               reason="Long sample burn failure", timeout=200, title='Long WAV burn:'):
-            return self.passing
+               reason="Long sample burn failure", timeout=240, title='Long WAV burn:'):
+            return False
 
         self.reset_board(oled)
         
