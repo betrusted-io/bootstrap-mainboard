@@ -57,6 +57,7 @@ def get_tests():
        tests.append(BattOn.Test())
        tests.append(VbusOn.Test())
        tests.append(SocFirmware.Test())
+       
        tests.append(AudioBurn.Test())
     
     tests.append(Current.Test())
@@ -167,11 +168,13 @@ def reset_tester_outputs():
 # tests is a list of tests
 def run_tests(tests, logfile=None):
     global oled
+    global environment
 
     elapsed_start = time.time()
     # each test runs, and can draw onto the screen for status updates
     # they return a simple pass/fail result, and if not passing, the full sequence aborts
     for test in tests:
+        test.set_env(environment) # make sure each command has a clean copy of their runtime environment
         test.reset(logfile)     # reset the test state before running it. this also resets the start timer.
         passed = test.run(oled)
         with canvas(oled) as draw:
@@ -398,6 +401,8 @@ def cleanup():
     GPIO.cleanup()
     
 if __name__ == "__main__":
+    global environment
+    environment = os.environ.copy() 
     atexit.register(cleanup)
     try:
         print("Tester main loop starting...")
