@@ -55,5 +55,5 @@ fi
 if [ $UPDATE_LONG_8 -eq 1 ]
 then
     md5sum $SHORTCD
-    sudo wishbone-tool --load-name $LONG8 --load-address 0x6340000 --load-flash
+    sudo wishbone-tool --load-name $LONG8 --load-address 0x6340000 --load-flash --no-verify
 fi
