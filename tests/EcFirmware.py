@@ -9,7 +9,7 @@ from gpiodefs import *
 import sys
 
 class Test(BaseTest):
-    def __init__(self, wfx_firmware="betrusted-scripts/wfx-firmware/wfm_wf200_C0.sec",
+    def __init__(self, wfx_firmware="precursors/wfm_wf200_C0.sec",
                  ec_firmware="precursors/bt-ec.bin"):
         BaseTest.__init__(self, name="EC Firmware", shortname="EcBurn")
         self.wfx_firmware = wfx_firmware

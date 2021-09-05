@@ -26,7 +26,7 @@ class Test(BaseTest):
         #GPIO.setup(GPIO_PROG_B, GPIO.IN)
         time.sleep(6.0)
         
-    def run_wishbone(self, oled, cmdline, reason, showerror=True, timeout=60, title=None):
+    def run_usb(self, oled, cmdline, reason, showerror=True, timeout=60, title=None):
         passing = True
         with canvas(oled) as draw:
             draw.text((0, 0), "Burning {}".format(title), fill="white")
@@ -70,15 +70,15 @@ class Test(BaseTest):
         #sudo wishbone-tool --load-name $SHORT8 --load-address 0x6000000 --load-flash --force-term
         self.reset_board(oled)
 
-        if False == self.run_wishbone(oled,
-               ['sudo', 'wishbone-tool', '--load-name', self.short8, '--load-address', '0x6000000', '--load-flash', "--force-term"],
+        if False == self.run_usb(oled,
+               ['/home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py', '--image', self.short8, '0x6000000'],
                reason="Short sample burn failure", timeout=90, title='Short WAV burn:'):
             return False
 
         self.reset_board(oled)
         
-        if False == self.run_wishbone(oled,
-               ['sudo', 'wishbone-tool', '--load-name', self.long8, '--load-address', '0x6340000', '--load-flash', "--force-term", "--no-verify"],
+        if False == self.run_usb(oled,
+               ['/home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py', '--image', self.long8, '0x6340000'],
                reason="Long sample burn failure", timeout=500, title='Long WAV burn:'):
             return False
 

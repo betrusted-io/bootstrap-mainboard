@@ -58,7 +58,7 @@ def get_tests():
        tests.append(VbusOn.Test())
        tests.append(SocFirmware.Test())
        
-#       tests.append(AudioBurn.Test())
+       tests.append(AudioBurn.Test())
     
     tests.append(Current.Test())
     tests.append(VbusOff.Test())

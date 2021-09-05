@@ -22,7 +22,7 @@ class Test(BaseTest):
 
         
         if False == self.run_nonblocking(oled,
-               ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', self.fpga, '--bitstream', '--spi-mode', '-r'],
+               ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', self.fpga, '--raw-binary', '--spi-mode', '-r'],
                reason="FPGA bitstream burn failure", timeout=60, title='FPGA bitstream:'):
             return self.passing
 
@@ -34,7 +34,7 @@ class Test(BaseTest):
 
         
         if False == self.run_nonblocking(oled,
-               ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', self.kernel, '--raw-binary', '-a', '0x980000', '-s', '-r'],
+               ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', self.kernel, '--raw-binary', '-a', '0x980000', '-s', '-r', '-n'],
                reason="Kernel burn failure", timeout=60, title='Kernel:'):
             return self.passing
 
