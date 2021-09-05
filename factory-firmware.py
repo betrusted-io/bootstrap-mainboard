@@ -47,7 +47,7 @@ def get_tests():
     tests.append(VbusOn.Test())
     tests.append(Current.Test())
     
-    if True:
+    if False:
        tests.append(FpgaId.Test())
        tests.append(EcFirmware.Test())
 
@@ -59,6 +59,10 @@ def get_tests():
        tests.append(SocFirmware.Test())
        
        tests.append(AudioBurn.Test())
+
+    if True:
+         #tests.append(SocFirmware.Test())
+         tests.append(SelfTest.Test())
     
     tests.append(Current.Test())
     tests.append(VbusOff.Test())
