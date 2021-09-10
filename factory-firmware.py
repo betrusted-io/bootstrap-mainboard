@@ -43,29 +43,30 @@ from tests.BaseTest import BaseTest
 
 def get_tests():
     tests = []
-    tests.append(BattOn.Test())
     tests.append(VbusOn.Test())
+    tests.append(BattOn.Test())
     tests.append(Current.Test())
     
-    if False:
+    if True:
        tests.append(FpgaId.Test())
        tests.append(EcFirmware.Test())
 
        # power cycle before FPGA burn
        tests.append(VbusOff.Test())
        tests.append(BattOff.Test())
-       tests.append(BattOn.Test())
        tests.append(VbusOn.Test())
+       tests.append(BattOn.Test())
        tests.append(SocFirmware.Test())
        
        #tests.append(AudioBurn.Test())
 
        tests.append(SelfTest.Test())
+       tests.append(AudioTest.Test())
 
-    if True:
-         #tests.append(SocFirmware.Test())
-         tests.append(SelfTest.Test())
-         tests.append(AudioTest.Test())
+    if False:
+       #tests.append(SocFirmware.Test())
+       tests.append(SelfTest.Test())
+       tests.append(AudioTest.Test())
     
     tests.append(Current.Test())
     tests.append(VbusOff.Test())
