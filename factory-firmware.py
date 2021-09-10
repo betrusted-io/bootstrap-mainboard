@@ -58,11 +58,14 @@ def get_tests():
        tests.append(VbusOn.Test())
        tests.append(SocFirmware.Test())
        
-       tests.append(AudioBurn.Test())
+       #tests.append(AudioBurn.Test())
+
+       tests.append(SelfTest.Test())
 
     if True:
          #tests.append(SocFirmware.Test())
          tests.append(SelfTest.Test())
+         tests.append(AudioTest.Test())
     
     tests.append(Current.Test())
     tests.append(VbusOff.Test())

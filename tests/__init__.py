@@ -9,4 +9,5 @@ __all__ = ["BaseTest",
            "FpgaId",
            "AudioBurn",
            "SelfTest",
+           "AudioTest",
           ]

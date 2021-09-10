@@ -37,13 +37,13 @@ class Test(BaseTest):
         time.sleep(3) # discharge
         
         with canvas(oled) as draw:
-            draw.text((0, 0), "Battery on...", fill="white")
-        GPIO.output(GPIO_BSIM, 1)
+            draw.text((0, 0), "Power on...", fill="white")
+        GPIO.output(GPIO_VBUS, 1)
         time.sleep(2) # stabilize
         
         with canvas(oled) as draw:
-            draw.text((0, 0), "Power on...", fill="white")
-        GPIO.output(GPIO_VBUS, 1)
+            draw.text((0, 0), "Battery on...", fill="white")
+        GPIO.output(GPIO_BSIM, 1)
         
         # open a serial terminal
         ser = serial.Serial()
