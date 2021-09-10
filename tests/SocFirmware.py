@@ -20,6 +20,20 @@ class Test(BaseTest):
         self.passing = True
         self.has_run = True
 
+        with canvas(oled) as draw:
+            draw.text((0, 0), "Soc fw/Power off...", fill="white")
+        GPIO.output(GPIO_BSIM, 0)
+        GPIO.output(GPIO_VBUS, 0)
+        time.sleep(3) # discharge
+        
+        with canvas(oled) as draw:
+            draw.text((0, 0), "Soc fw/Power on...", fill="white")
+        GPIO.output(GPIO_VBUS, 1)
+        time.sleep(2) # stabilize
+        
+        with canvas(oled) as draw:
+            draw.text((0, 0), "Soc fw/Battery on...", fill="white")
+        GPIO.output(GPIO_BSIM, 1)
         
         if False == self.run_nonblocking(oled,
                ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', self.fpga, '--raw-binary', '--spi-mode', '-r'],

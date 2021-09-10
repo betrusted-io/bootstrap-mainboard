@@ -31,18 +31,18 @@ class Test(BaseTest):
         GPIO.output(GPIO_ISENSE, 1) # set to "high" range, stabilize voltage
 
         with canvas(oled) as draw:
-            draw.text((0, 0), "Power off...", fill="white")
+            draw.text((0, 0), "Selftest / Power off...", fill="white")
         GPIO.output(GPIO_BSIM, 0)
         GPIO.output(GPIO_VBUS, 0)
         time.sleep(3) # discharge
         
         with canvas(oled) as draw:
-            draw.text((0, 0), "Power on...", fill="white")
+            draw.text((0, 0), "Selftest / Power on...", fill="white")
         GPIO.output(GPIO_VBUS, 1)
         time.sleep(2) # stabilize
         
         with canvas(oled) as draw:
-            draw.text((0, 0), "Battery on...", fill="white")
+            draw.text((0, 0), "Selftest / Battery on...", fill="white")
         GPIO.output(GPIO_BSIM, 1)
         
         # open a serial terminal
@@ -106,6 +106,15 @@ class Test(BaseTest):
                     if int(test_output[5]) != 2:
                         self.passing = False
                         self.add_reason("U16P TUSB320 fail")
+                if test_output[2] == 'TRNG':
+                    if test_output[3] != 'PASS':
+                        self.passing = False
+                        if test_output[4] == 'AV0':
+                            self.add_reason("U11R/U12R/D11R fail")
+                        if test_output[4] == 'AV1':
+                            self.add_reason("U11R/U10R/D10R fail")
+                        if test_output[4] == 'RO':
+                            self.add_reason("U11F Ring Osc fail")
         
         
         with canvas(oled) as draw:

@@ -35,7 +35,7 @@ class Test(BaseTest):
         while proc.poll() is None:
             line = proc.stdout.readline()
             #print(line)
-            if self.logfile:
+            if self.logfile and "Elapsed" not in line:
                 self.logfile.write(line)
             with canvas(oled) as draw:
                 if title:
@@ -70,15 +70,19 @@ class Test(BaseTest):
         #sudo wishbone-tool --load-name $SHORT8 --load-address 0x6000000 --load-flash --force-term
         self.reset_board(oled)
 
-        if False == self.run_usb(oled,
-               ['/home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py', '--image', self.short8, '0x6000000'],
-               reason="Short sample burn failure", timeout=90, title='Short WAV burn:'):
-            return False
+        if False: # skip the short wav burn area
+            if False == self.run_usb(oled,
+                   ['/home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py', '--image',
+                    self.short8, '0x6000000'],
+                   reason="Short sample burn failure", timeout=90, title='Short WAV burn:'):
+                return False
 
-        self.reset_board(oled)
-        
+            self.reset_board(oled)
+
+        # put self.short8 instead of self.long8 here, to save burn time BUT still test USB
         if False == self.run_usb(oled,
-               ['/home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py', '--image', self.long8, '0x6340000'],
+               ['/home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py', '--image',
+                self.short8, '0x6340000'],
                reason="Long sample burn failure", timeout=500, title='Long WAV burn:'):
             return False
 
