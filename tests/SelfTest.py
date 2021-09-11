@@ -6,6 +6,7 @@ from luma.oled.device import ssd1322
 
 from tests.BaseTest import BaseTest
 from gpiodefs import *
+from adc128 import *
 import sys
 
 import pexpect
@@ -72,7 +73,6 @@ class Test(BaseTest):
         time.sleep(3) # give a little time for init scripts to finish running
 
         slow_send(console, "test factory\r")
-
         try:
             console.expect_exact("|TSTR|DONE", 10)
         except Exception as e:
@@ -115,7 +115,96 @@ class Test(BaseTest):
                             self.add_reason("U11R/U10R/D10R fail")
                         if test_output[4] == 'RO':
                             self.add_reason("U11F Ring Osc fail")
-        
+                if test_output[2] == 'VCCINT':
+                    if test_output[3] != 'PASS':
+                        self.passing = False
+                        self.add_reason("VCCINT {} fail (U12F)".format(test_output[4]))
+                if test_output[2] == 'VCCAUX':
+                    if test_output[3] != 'PASS':
+                        self.passing = False
+                        self.add_reason("VCCAUX {} fail (U13F)".format(test_output[4]))
+                if test_output[2] == 'VCCBRAM':
+                    if test_output[3] != 'PASS':
+                        self.passing = False
+                        self.add_reason("VCCBRAM {} fail (U12F)".format(test_output[4]))
+                        
+        with canvas(oled) as draw:
+            draw.text((0, 0), "Selftest / Backlight...", fill="white")
+        # switch to battery power exclusively
+        #GPIO.output(GPIO_VBUS, 0)
+        time.sleep(3) # stabilize
+
+        # measure bright backlight
+        slow_send(console, "test bl2\r")
+        try:
+            console.expect_exact("|TSTR|BL2", 10)
+        except Exception as e:
+            self.passing = False
+            self.add_reason("BL2 could not run")
+            return self.passing
+        time.sleep(3)
+
+        ibat_bl2 = 0.0
+        for i in range(10):
+            time.sleep(0.2)
+            ibat_bl2 += read_i_vbus()
+        ibat_bl2 /= 10.0
+                                        
+        # measure mid-level backlight
+        slow_send(console, "test bl1\r")
+        try:
+            console.expect_exact("|TSTR|BL1", 10)
+        except Exception as e:
+            self.passing = False
+            self.add_reason("BL1 could not run")
+            return self.passing
+        time.sleep(3)
+
+        ibat_bl1 = 0.0
+        for i in range(10):
+            time.sleep(0.2)
+            ibat_bl1 += read_i_vbus()
+        ibat_bl1 /= 10.0
+
+        # turn off backlight
+        slow_send(console, "test bl0\r")
+        try:
+            console.expect_exact("|TSTR|BL0", 10)
+        except Exception as e:
+            self.passing = False
+            self.add_reason("BL0 could not run")
+            return self.passing
+        time.sleep(3)
+
+        ibat_nom = 0.0
+        for i in range(10):
+            time.sleep(0.2)
+            ibat_nom += read_i_vbus()
+        ibat_nom /= 10.0
+
+        self.logfile.write("ibat_bl2: {:.4f}\n".format(ibat_bl2))
+        self.logfile.write("ibat_bl1: {:.4f}\n".format(ibat_bl1))
+        self.logfile.write("ibat_nom: {:.4f}\n".format(ibat_nom))
+
+        # basic functionality
+        if (ibat_bl2 < ibat_bl1) or (ibat_bl1 < ibat_nom):
+            self.passing = False
+            self.add_reason("Backlight fail / U12W")
+            return self.passing
+        # check that dimming happens (there is a failure mode where no dimming happens)
+        if (ibat_bl2 - ibat_nom) < (ibat_bl1 - ibat_nom) * 2:
+            self.passing = False
+            self.add_reason("Backlight dimming fail / U12W")
+            return self.passing
+
+        # restore wfi state after backlight tests (they side effect WFI by disabling it)
+        slow_send(console, "test wfireset\r")
+        try:
+            console.expect_exact("|TSTR|WFIRESET", 10)
+        except Exception as e:
+            self.passing = False
+            self.add_reason("wfireset could not run")
+            return self.passing
         
         with canvas(oled) as draw:
             draw.text((0, 0), "Self test complete!", fill="white")
