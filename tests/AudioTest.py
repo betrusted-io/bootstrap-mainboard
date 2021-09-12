@@ -64,7 +64,8 @@ class Test(BaseTest):
         results = self.console.before.decode('utf-8')
         for line in results.split('\r'):
             if 'TSTR|' in line:
-                self.logfile.write(line.rstrip() + '\n')
+                if self.logfile:
+                    self.logfile.write(line.rstrip() + '\n')
                 #print(line.rstrip())
                 test_output = line.split('|')
                 if test_output[2] == 'ARESULT':
@@ -87,7 +88,8 @@ class Test(BaseTest):
         results = self.console.before.decode('utf-8')
         for line in results.split('\r'):
             if 'TSTR|' in line:
-                self.logfile.write(line.rstrip() + '\n')
+                if self.logfile:
+                    self.logfile.write(line.rstrip() + '\n')
                 #print(line.rstrip())
                 test_output = line.split('|')
                 if test_output[2] == 'ARESULT':
@@ -110,7 +112,8 @@ class Test(BaseTest):
         results = self.console.before.decode('utf-8')
         for line in results.split('\r'):
             if 'TSTR|' in line:
-                self.logfile.write(line.rstrip() + '\n')
+                if self.logfile:
+                    self.logfile.write(line.rstrip() + '\n')
                 #print(line.rstrip())
                 test_output = line.split('|')
                 if test_output[2] == 'ARESULT':
@@ -132,7 +135,8 @@ class Test(BaseTest):
         results = self.console.before.decode('utf-8')
         for line in results.split('\r'):
             if 'TSTR|' in line:
-                self.logfile.write(line.rstrip() + '\n')
+                if self.logfile:
+                    self.logfile.write(line.rstrip() + '\n')
                 #print(line.rstrip())
                 test_output = line.split('|')
                 if test_output[2] == 'ARESULT':

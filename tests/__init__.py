@@ -10,4 +10,7 @@ __all__ = ["BaseTest",
            "AudioBurn",
            "SelfTest",
            "AudioTest",
+           "PowerOn",
+           "PowerOff",
+           "Zero",
           ]

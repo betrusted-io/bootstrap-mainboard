@@ -8,7 +8,7 @@ from adc128 import *
 from datetime import datetime
 
 class Test(BaseTest):
-    def __init__(self, ibat_limit=250, ibus_limit=800, vbus_min_limit=4.5, vbus_max_limit=5.5):
+    def __init__(self, ibat_limit=250, ibus_limit=580, vbus_min_limit=4.5, vbus_max_limit=5.5):
         BaseTest.__init__(self, name="Power On", shortname="PwrOn")
         self.ibat_limit = ibat_limit
         self.ibus_limit = ibus_limit
@@ -56,7 +56,7 @@ class Test(BaseTest):
             self.add_reason("VBUS too low: {:.3f}V".format(vbus_min))
         if vbus_max > self.vbus_max_limit:
             self.passing = False
-            self.add_reason("VBUS too high: {:3.f}V".format(vbus_max))
+            self.add_reason("VBUS too high: {:.3f}V".format(vbus_max))
         
         with canvas(oled) as draw:
             line = 0

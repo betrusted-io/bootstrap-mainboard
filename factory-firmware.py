@@ -43,11 +43,10 @@ from tests.BaseTest import BaseTest
 
 def get_tests():
     tests = []
-    tests.append(VbusOn.Test())
-    tests.append(BattOn.Test())
-    tests.append(Current.Test())
+    tests.append(Zero.Test())
+    tests.append(PowerOn.Test())
     
-    if False:
+    if True:
        tests.append(FpgaId.Test())
        tests.append(EcFirmware.Test())
 
@@ -58,14 +57,12 @@ def get_tests():
 
        tests.append(AudioBurn.Test())
 
-    if True:
+    else:
        #tests.append(SocFirmware.Test())
        tests.append(SelfTest.Test())
        #tests.append(AudioTest.Test())
     
-    tests.append(Current.Test())
-    tests.append(VbusOff.Test())
-    tests.append(BattOff.Test())
+    tests.append(PowerOff.Test())
     return tests
 
 def makeint(i, base=10):
@@ -138,7 +135,7 @@ def wait_start():
         time.sleep(0.1)
     while GPIO.input(GPIO_START) == GPIO.HIGH:
         time.sleep(0.1)
-    
+
 def abort_callback(channel):
     global IN_PROGRESS
     global MENU_MODE
@@ -338,6 +335,7 @@ def main():
     
     GPIO.setup(GPIO_START, GPIO.IN)
     GPIO.setup(GPIO_FUNC, GPIO.IN)
+    GPIO.setup(GPIO_VIBE_SENSE, GPIO.IN)
     
     GPIO.setup(GPIO_VBUS, GPIO.OUT)
     GPIO.setup(GPIO_BSIM, GPIO.OUT)

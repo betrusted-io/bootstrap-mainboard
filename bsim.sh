@@ -9,14 +9,14 @@ if [ ! -d /sys/class/gpio/gpio26 ]
 then
     echo "26" > /sys/class/gpio/export
 fi
-if [ ! -d /sys/class/gpio/gpio37 ]
+if [ ! -d /sys/class/gpio/gpio19 ]
 then
-    echo "37" > /sys/class/gpio/export
+    echo "19" > /sys/class/gpio/export
 fi
 
 # select high current sense position
-echo "out" > /sys/class/gpio/gpio37/direction
-echo "1" > /sys/class/gpio/gpio37/value
+echo "out" > /sys/class/gpio/gpio19/direction
+echo "1" > /sys/class/gpio/gpio19/value
 
 sleep 0.1
 echo "out" > /sys/class/gpio/gpio26/direction

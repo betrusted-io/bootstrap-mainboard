@@ -30,7 +30,7 @@ class Test(BaseTest):
             GPIO.output(GPIO_VBUS, 0)
         if vbus > self.vbus_max_limit:
             self.passing = False
-            self.add_reason("VBUS too high: {:3.f}V".format(vbus_max))
+            self.add_reason("VBUS too high: {:.3f}V".format(vbus_max))
             GPIO.output(GPIO_VBUS, 0)
         
         self.has_run = True

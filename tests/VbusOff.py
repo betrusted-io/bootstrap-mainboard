@@ -29,7 +29,7 @@ class Test(BaseTest):
             self.add_reason("VBUS off too low: {:.3f}V".format(vbus_min))
         if vbus > self.vbus_max_limit:
             self.passing = False
-            self.add_reason("VBUS off too high: {:3.f}V".format(vbus_max))
+            self.add_reason("VBUS off too high: {:.3f}V".format(vbus_max))
         
         self.has_run = True
         return self.passing
