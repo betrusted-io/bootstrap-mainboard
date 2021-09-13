@@ -43,7 +43,7 @@ from tests.BaseTest import BaseTest
 
 def get_tests():
     tests = []
-    tests.append(Zero.Test())
+    #tests.append(Zero.Test())
     tests.append(PowerOn.Test())
     
     if True:
@@ -54,13 +54,14 @@ def get_tests():
        
        tests.append(SelfTest.Test())
        tests.append(AudioTest.Test())
-
        tests.append(AudioBurn.Test())
 
+       tests.append(Kill.Test())
     else:
        #tests.append(SocFirmware.Test())
-       tests.append(SelfTest.Test())
+       #tests.append(SelfTest.Test())
        #tests.append(AudioTest.Test())
+       tests.append(Kill.Test())
     
     tests.append(PowerOff.Test())
     return tests
