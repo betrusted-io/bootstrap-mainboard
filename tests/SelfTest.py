@@ -43,6 +43,19 @@ class Test(BaseTest):
         self.passing = True
         self.has_run = True
 
+        # open a serial terminal
+        ser = serial.Serial()
+        ser.baudrate = 115200
+        ser.port="/dev/ttyS0"
+        ser.stopbits=serial.STOPBITS_ONE
+        ser.xonxoff=0
+        try:
+            ser.open()
+        except:
+            print("couldn't open serial port")
+            exit(1)
+        self.console = fdspawn(ser)        
+
         # make sure the UART is connected
         GPIO.output(GPIO_UART_SOC, 1)
         GPIO.output(GPIO_ISENSE, 1) # set to "high" range, stabilize voltage
@@ -60,21 +73,8 @@ class Test(BaseTest):
         with canvas(oled) as draw:
             draw.text((0, 0), "Selftest / Power on...", fill="white")
         GPIO.output(GPIO_VBUS, 1)
-        time.sleep(1)
+        time.sleep(0.5)
         GPIO.output(GPIO_VBUS, 0) # self-test is done on 'battery power' to control i-measurements
-
-        # open a serial terminal
-        ser = serial.Serial()
-        ser.baudrate = 115200
-        ser.port="/dev/ttyS0"
-        ser.stopbits=serial.STOPBITS_ONE
-        ser.xonxoff=0
-        try:
-            ser.open()
-        except:
-            print("couldn't open serial port")
-            exit(1)
-        self.console = fdspawn(ser)        
 
         with canvas(oled) as draw:
             draw.text((0, 0), "Running self test...", fill="white")
@@ -139,6 +139,10 @@ class Test(BaseTest):
                     if test_output[3] != 'PASS':
                         self.passing = False
                         self.add_reason("VCCBRAM {} fail (U12F)".format(test_output[4]))
+                if test_output[2] == 'ECRESET':
+                    if test_output[3] != 'PASS':
+                        self.passing = False
+                        self.add_reason("ECRESET fail (Q18F/U11K/U10K)")
                         
         with canvas(oled) as draw:
             draw.text((0, 0), "Selftest / Backlight...", fill="white")
