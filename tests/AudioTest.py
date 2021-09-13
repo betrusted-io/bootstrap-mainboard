@@ -34,8 +34,16 @@ class Test(BaseTest):
         self.passing = True
         self.has_run = True
 
-        # ASSUME: power is on, device is booted.
-        time.sleep(2) # give a little time for any state on the last test to clear
+        with canvas(oled) as draw:
+            draw.text((0, 0), "Audio / Battery on...", fill="white")
+        GPIO.output(GPIO_BSIM, 1)
+        time.sleep(0.5)
+        
+        with canvas(oled) as draw:
+            draw.text((0, 0), "Audio / Power on...", fill="white")
+        GPIO.output(GPIO_VBUS, 1)
+
+        time.sleep(5) # give a little time for the device to boot
 
         # open a serial terminal
         ser = serial.Serial()
@@ -61,7 +69,7 @@ class Test(BaseTest):
         time.sleep(3)
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
-        results = self.console.before.decode('utf-8')
+        results = self.console.before.decode('utf-8', errors='ignore')
         for line in results.split('\r'):
             if 'TSTR|' in line:
                 if self.logfile:
@@ -85,7 +93,7 @@ class Test(BaseTest):
         time.sleep(3)
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
-        results = self.console.before.decode('utf-8')
+        results = self.console.before.decode('utf-8', errors='ignore')
         for line in results.split('\r'):
             if 'TSTR|' in line:
                 if self.logfile:
@@ -109,7 +117,7 @@ class Test(BaseTest):
         time.sleep(3)
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
-        results = self.console.before.decode('utf-8')
+        results = self.console.before.decode('utf-8', errors='ignore')
         for line in results.split('\r'):
             if 'TSTR|' in line:
                 if self.logfile:
@@ -132,7 +140,7 @@ class Test(BaseTest):
         time.sleep(3)
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
-        results = self.console.before.decode('utf-8')
+        results = self.console.before.decode('utf-8', errors='ignore')
         for line in results.split('\r'):
             if 'TSTR|' in line:
                 if self.logfile:

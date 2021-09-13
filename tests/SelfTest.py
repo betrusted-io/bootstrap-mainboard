@@ -56,6 +56,11 @@ class Test(BaseTest):
             exit(1)
         self.console = fdspawn(ser)        
 
+        # make sure that the CRESET_N is de-asserted
+        # actually this doesn't need to be a tri-state because this goes through an open-collector driver
+        GPIO.setup(GPIO_CRESET_N, GPIO.OUT)
+        GPIO.output(GPIO_CRESET_N, 1)
+        
         # make sure the UART is connected
         GPIO.output(GPIO_UART_SOC, 1)
         GPIO.output(GPIO_ISENSE, 1) # set to "high" range, stabilize voltage
@@ -87,16 +92,55 @@ class Test(BaseTest):
             self.add_reason("OS did not boot in time")
             return self.passing
 
-        time.sleep(3) # give a little time for init scripts to finish running
+        time.sleep(5) # give a little time for init scripts to finish running
 
+        #### at this moment, VBUS is off. test boost mode.
+        with canvas(oled) as draw:
+            draw.text((0, 0), "Selftest / Boost...", fill="white")
+        vbus = read_vbus()
+        #print("vbus before: {}", vbus)
+        if vbus > 1.0:
+            self.passing = False
+            self.add_reason("VBUS leakage (boost mode Q14P)")
+            
+        self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
+        time.sleep(1)
+        vbus = read_vbus()
+
+        if vbus < 4.5:
+            self.passing = False
+            self.add_reason("VBUS boost too low (Q14P/U17P)")
+        if self.logfile:
+            self.logfile.write("VBoost: {:.3f}V\n".format(vbus))
+        
+        self.try_cmd("test boostoff\r", "|TSTR|BOOSTOFF", timeout=10) 
+        time.sleep(1)
+
+        vbus = read_vbus()
+        #print("vbus after: {}", vbus)
+        if vbus > 1.0:
+            self.passing = False
+            self.add_reason("VBUS discharge (R36P)")
+        
+        #### run the primary self-test
         self.try_cmd("test factory\r", "|TSTR|DONE") 
-        results = self.console.before.decode('utf-8')
+        results = self.console.before.decode('utf-8', errors='ignore')
         for line in results.split('\r'):
             if 'TSTR|' in line:
                 if self.logfile:
                     self.logfile.write(line.rstrip() + '\n')
                 #print(line.rstrip())
                 test_output = line.split('|')
+                if test_output[2] == 'ECREV':
+                    if test_output[3] == 'ffffffff':
+                         self.passing = False
+                         self.add_reason("U11K/U10K programming failure")
+                         return self.passing # severe error, abort test immediately
+                    if test_output[3] == 'dddddddd':
+                         self.passing = False
+                         self.add_reason("U11K/U10K/U10W boot failure")
+                         self.add_reason("or U14W/U12W/U17P/U11P I2C fail")
+                         return self.passing # severe error, abort test immediately
                 if test_output[2] == 'GYRO':
                     if int(test_output[6]) != 106: # id code
                         self.passing = False
@@ -193,34 +237,6 @@ class Test(BaseTest):
             self.add_reason("Backlight dimming fail / U12W")
             return self.passing
 
-        #### at this moment, VBUS is off. test boost mode.
-        with canvas(oled) as draw:
-            draw.text((0, 0), "Selftest / Boost...", fill="white")
-        vbus = read_vbus()
-        #print("vbus before: {}", vbus)
-        if vbus > 1.0:
-            self.passing = False
-            self.add_reason("VBUS leakage (boost mode Q14P)")
-            
-        self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
-        time.sleep(1)
-        vbus = read_vbus()
-
-        if vbus < 4.5:
-            self.passing = False
-            self.add_reason("VBUS boost too low (Q14P/U17P)")
-        if self.logfile:
-            self.logfile.write("VBoost: {:.3f}V\n".format(vbus))
-        
-        self.try_cmd("test boostoff\r", "|TSTR|BOOSTOFF", timeout=10) 
-        time.sleep(1)
-
-        vbus = read_vbus()
-        #print("vbus after: {}", vbus)
-        if vbus > 1.0:
-            self.passing = False
-            self.add_reason("VBUS discharge (R36P)")
-        
         ##### test charger
         with canvas(oled) as draw:
             draw.text((0, 0), "Selftest / Charger...", fill="white")
