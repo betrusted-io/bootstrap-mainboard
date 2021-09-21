@@ -142,7 +142,7 @@ class Test(BaseTest):
                          self.add_reason("or U14W/U12W/U17P/U11P I2C fail")
                          return self.passing # severe error, abort test immediately
                 if test_output[2] == 'GYRO':
-                    if int(test_output[6]) != 106: # id code
+                    if int(test_output[6]) != 0x6A: # id code = 0x6A == LSM6DSLTR; previous rev is 0x69 == LSM6DS3.
                         self.passing = False
                         self.add_reason("U14W Gyro fail")
                 if test_output[2] == 'WF200REV':
