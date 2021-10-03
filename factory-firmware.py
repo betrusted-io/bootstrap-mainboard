@@ -248,7 +248,9 @@ def do_shutdown():
     time.sleep(15)
 
 def do_update_cmd(cmd, timeout=60):
-    result = subprocess.run(cmd, capture_output=True, timeout=timeout, env=self.environment)
+    global environment
+     
+    result = subprocess.run(cmd, capture_output=True, timeout=timeout, env=environment)
     stdout = result.stdout.decode("utf-8").splitlines()
     stderr = result.stderr.decode("utf-8").splitlines()
     print("do_update_cmd: " + cmd + '\n' + stdout + stderr)
