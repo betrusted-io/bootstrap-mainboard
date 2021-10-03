@@ -257,7 +257,9 @@ def do_update_cmd(cmd, timeout=60):
     result = subprocess.run(cmd, capture_output=True, timeout=timeout, env=environment)
     stdout = result.stdout.decode("utf-8").splitlines()
     stderr = result.stderr.decode("utf-8").splitlines()
-    print("do_update_cmd: " + cmd_str + '\n' + stdout + stderr)
+    print("do_update_cmd: " + cmd_str)
+    print(result.stdout.decode("utf-8"))
+    print(result.stderr.decode("utf-8"))
     with canvas(oled) as draw:
         oled.clear()
         draw.text((0,0), "{}:".format(cmd_str), fill="white")
