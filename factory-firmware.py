@@ -292,22 +292,22 @@ def do_update():
     # checkout the main branch
     do_update_cmd(['git', 'checkout', 'main'], timeout=5)
     
-    time.sleep(4)
+    time.sleep(3)
     # update the remotes
     do_update_cmd(['git', 'fetch', 'origin'], timeout=90)
-    time.sleep(4)
+    time.sleep(3)
         
     # delete all the local changes
     do_update_cmd(['git', 'reset', '--hard', 'HEAD'], timeout=5)
-    time.sleep(4)
+    time.sleep(3)
 
     # merge into the branch
     do_update_cmd(['git', 'merge', 'origin/main'], timeout=10)
-    time.sleep(4)
+    time.sleep(3)
     
     # merge into the branch
-    do_update_cmd(['git', 'submodule', 'update'], timeout=60)
-    time.sleep(4)
+    do_update_cmd(['git', 'submodule', 'update', '--recursive'], timeout=60)
+    time.sleep(3)
 
     csum_width = 10
     # compute md5sums and print first few chars of each of critical files to screen
