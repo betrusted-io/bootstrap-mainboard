@@ -38,6 +38,7 @@ def get_ip_address(ifname):
 oled=None  # global placeholder for the OLED device handle
 IN_PROGRESS=False # set to true if a test is in progress
 MENU_MODE=False
+logfile=None
 
 from tests import *
 from tests.BaseTest import BaseTest
@@ -249,6 +250,7 @@ def do_shutdown():
 
 def do_update_cmd(cmd, timeout=60):
     global environment
+    global logfile
     cmd_str = ''
     for item in cmd:
          cmd_str += item
@@ -274,10 +276,10 @@ def do_update_cmd(cmd, timeout=60):
                 break
            draw.text((0,FONT_HEIGHT*linecnt), line, fill="white")
            linecnt = linecnt + 1
-    if self.logfile:
-        self.logfile.write("do_update_cmd: {}\n".format(cmd_str))
-        self.logfile.write(stdout.decode("utf-8"))
-        self.logfile.write(stderr.decode("utf-8"))
+    if logfile:
+        logfile.write("do_update_cmd: {}\n".format(cmd_str))
+        logfile.write(stdout.decode("utf-8"))
+        logfile.write(stderr.decode("utf-8"))
 
 def do_update():
     # note to self:
@@ -320,6 +322,10 @@ def do_update():
          'minder ' : hashlib.md5(open('scriptminder.py', 'rb').read()).hexdigest()[:csum_width],
          'myself ' : hashlib.md5(open('factory-firmware.py', 'rb').read()).hexdigest()[:csum_width],
     }
+    if logfile:
+         logfile.write("update checksums:\n")
+         for name, val in csums:
+              logfile.write("{} : {}\n".format(name, val))
     with canvas(oled) as draw:
         draw.text((0, FONT_HEIGHT * 0), "Take photo and send to bunnie@kosagi.com:")
         index = 0
@@ -392,6 +398,7 @@ def main():
     global ADC128_REG, ADC128_DEV0, ADC128_DEV1, ADC_CH
     global IN_PROGRESS
     global MENU_MODE
+    global logfile
 
     parser = argparse.ArgumentParser(description="Precursor Factory Test")
     parser.add_argument(
