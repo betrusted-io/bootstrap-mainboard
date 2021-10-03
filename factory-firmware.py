@@ -294,7 +294,7 @@ def do_update():
     
     time.sleep(4)
     # update the remotes
-    do_update_cmd(['git', 'fetch'], timeout=90)
+    do_update_cmd(['git', 'fetch', 'origin'], timeout=90)
     time.sleep(4)
         
     # delete all the local changes
