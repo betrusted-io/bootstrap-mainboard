@@ -254,13 +254,13 @@ def do_update_cmd(cmd, timeout=60):
          cmd_str += item
          cmd_str += ' '
      
-    result = subprocess.run(cmd_str, capture_output=True, timeout=timeout, env=environment)
+    result = subprocess.run(cmd, capture_output=True, timeout=timeout, env=environment)
     stdout = result.stdout.decode("utf-8").splitlines()
     stderr = result.stderr.decode("utf-8").splitlines()
-    print("do_update_cmd: " + cmd + '\n' + stdout + stderr)
+    print("do_update_cmd: " + cmd_str + '\n' + stdout + stderr)
     with canvas(oled) as draw:
         oled.clear()
-        draw.text((0,0), "{}:".format(cmd), fill="white")
+        draw.text((0,0), "{}:".format(cmd_str), fill="white")
         linecnt = 1
         while line in stderr:
            if linecnt > 4:
