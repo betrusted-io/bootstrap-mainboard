@@ -366,7 +366,7 @@ def do_menu():
     menu_items = [
          ("Return to main screen", do_return),
          ("Shutdown", do_shutdown ),
-         ("Update", do_update ),
+         ("Update (erases local changes on main!)", do_update ),
     ]
     
     oled.clear()
