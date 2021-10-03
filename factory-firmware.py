@@ -325,7 +325,7 @@ def do_update():
                   draw.text((0, FONT_HEIGHT * line_num), final_str)
                   final_str = ''
                   line_num += 1
-     wait_start()
+    wait_start()
 
 def do_return():
      pass
