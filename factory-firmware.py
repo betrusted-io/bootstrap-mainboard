@@ -298,7 +298,7 @@ def do_update():
     time.sleep(4)
         
     # delete all the local changes
-    do_update_cmd(['git', 'reset', '--head', 'HARD'], timeout=5)
+    do_update_cmd(['git', 'reset', '--hard', 'HEAD'], timeout=5)
     time.sleep(4)
 
     # merge into the branch
