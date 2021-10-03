@@ -264,12 +264,12 @@ def do_update_cmd(cmd, timeout=60):
         oled.clear()
         draw.text((0,0), "{}:".format(cmd_str), fill="white")
         linecnt = 1
-        while line in stderr:
+        for line in stderr:
            if linecnt > 4:
                 break
            draw.text((0,FONT_HEIGHT*linecnt), line, fill="white")
            linecnt = linecnt + 1
-        while line in stdout:
+        for line in stdout:
            if linecnt > 4:
                 break
            draw.text((0,FONT_HEIGHT*linecnt), line, fill="white")
