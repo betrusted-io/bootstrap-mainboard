@@ -302,11 +302,11 @@ def do_update():
     time.sleep(4)
 
     # merge into the branch
-    do_update_cmd('git', 'merge', 'origin/main', timeout=10)
+    do_update_cmd(['git', 'merge', 'origin/main'], timeout=10)
     time.sleep(4)
     
     # merge into the branch
-    do_update_cmd('git', 'submodule', 'update', timeout=60)
+    do_update_cmd(['git', 'submodule', 'update'], timeout=60)
     time.sleep(4)
 
     csum_width = 10
