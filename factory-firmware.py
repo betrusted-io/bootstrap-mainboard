@@ -278,8 +278,8 @@ def do_update_cmd(cmd, timeout=60):
            linecnt = linecnt + 1
     if logfile:
         logfile.write("do_update_cmd: {}\n".format(cmd_str))
-        logfile.write(stdout.decode("utf-8"))
-        logfile.write(stderr.decode("utf-8"))
+        logfile.write(result.stdout.decode("utf-8"))
+        logfile.write(result.stderr.decode("utf-8"))
 
 def do_update():
     # note to self:
