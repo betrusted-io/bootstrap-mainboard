@@ -282,23 +282,23 @@ def do_update():
     # that the factory can take a photo of it and I can confirm things are in fact up to date.
      
     # checkout the main branch
-    do_update_cmd('git checkout main', timeout=5)
+    do_update_cmd(['git', 'checkout', 'main'], timeout=5)
     
     time.sleep(4)
     # update the remotes
-    do_update_cmd('git fetch', timeout=90)
+    do_update_cmd(['git', 'fetch'], timeout=90)
     time.sleep(4)
         
     # delete all the local changes
-    do_update_cmd('git reset --head HARD', timeout=5)
+    do_update_cmd(['git', 'reset', '--head', 'HARD'], timeout=5)
     time.sleep(4)
 
     # merge into the branch
-    do_update_cmd('git merge origin/main', timeout=10)
+    do_update_cmd('git', 'merge', 'origin/main', timeout=10)
     time.sleep(4)
     
     # merge into the branch
-    do_update_cmd('git submodule update', timeout=60)
+    do_update_cmd('git', 'submodule', 'update', timeout=60)
     time.sleep(4)
 
     csum_width = 10
