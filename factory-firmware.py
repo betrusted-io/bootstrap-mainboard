@@ -249,10 +249,10 @@ def do_shutdown():
 
 ############################# TODO ##########################
 def do_update_cmd(cmd):
-    print("do_update_cmd: " + cmd + '\n' + stdout.decode("utf-8") + stderr.decode("utf-8"))
     result = subprocess.run(cmd, capture_output=True, timeout=timeout, env=self.environment)
     stdout = result.stdout.decode("utf-8").splitlines()
     stderr = result.stderr.decode("utf-8").splitlines()
+    print("do_update_cmd: " + cmd + '\n' + stdout + stderr)
     with canvas(oled) as draw:
         oled.clear()
         draw.text((0,0), "{}:".format(cmd), fill="white")
