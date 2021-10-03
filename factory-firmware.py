@@ -14,6 +14,7 @@ from luma.core.interface.serial import bitbang
 import RPi.GPIO as GPIO
 from luma.oled.device import ssd1322
 import luma.oled.device
+import hashlib
 
 from gpiodefs import *
 from adc128 import *
@@ -247,6 +248,30 @@ def do_shutdown():
     time.sleep(15)
 
 ############################# TODO ##########################
+def do_update_cmd(cmd):
+    print("do_update_cmd: " + cmd + '\n' + stdout.decode("utf-8") + stderr.decode("utf-8"))
+    result = subprocess.run(cmd, capture_output=True, timeout=timeout, env=self.environment)
+    stdout = result.stdout.decode("utf-8").splitlines()
+    stderr = result.stderr.decode("utf-8").splitlines()
+    with canvas(oled) as draw:
+        oled.clear()
+        draw.text((0,0), "{}:".format(cmd), fill="white")
+        linecnt = 1
+        while line in stderr:
+           if linecnt > 4:
+                break
+           draw.text((0,FONT_HEIGHT*linecnt), line, fill="white")
+           linecnt = linecnt + 1
+        while line in stdout:
+           if linecnt > 4:
+                break
+           draw.text((0,FONT_HEIGHT*linecnt), line, fill="white")
+           linecnt = linecnt + 1
+    if self.logfile:
+        self.logfile.write("do_update_cmd: {}\n".format(cmd))
+        self.logfile.write(stdout.decode("utf-8"))
+        self.logfile.write(stderr.decode("utf-8"))
+
 def do_update():
     # note to self:
     # updates are done with a 'git pull origin main' and then a 'git submodule update'
@@ -254,10 +279,53 @@ def do_update():
     # would also be nice to relay the subprocess.run() outputs to the screen somehow for review & confirmation
     # and also finally end with a screen that shows the sha2sum of the main script plus key files, so
     # that the factory can take a photo of it and I can confirm things are in fact up to date.
+     
+    # checkout the main branch
+    do_update_cmd('git checkout main')
+    
+    time.sleep(4)
+    # update the remotes
+    do_update_cmd('git fetch')
+    time.sleep(4)
+        
+    # delete all the local changes
+    do_update_cmd('git reset --head HARD')
+    time.sleep(4)
+
+    # merge into the branch
+    do_update_cmd('git merge origin/main')
+    time.sleep(4)
+    
+    # merge into the branch
+    do_update_cmd('git submodule update')
+    time.sleep(4)
+
+    csum_width = 10
+    # compute md5sums and print first few chars of each of critical files to screen
+    # in a 2d array
+    csums = {
+         'xous   ' : hashlib.md5(open('precursors/xous.img', 'rb').read()).hexdigest()[:csum_width],
+         'soc    ' : hashlib.md5(open('precursors/soc_csr.bin', 'rb').read()).hexdigest()[:csum_width],
+         'loader ' : hashlib.md5(open('precursors/loader.bin', 'rb').read()).hexdigest()[:csum_width],
+         'ec     ' : hashlib.md5(open('precursors/bt-ec.bin', 'rb').read()).hexdigest()[:csum_width],
+         'wfm    ' : hashlib.md5(open('precursors/wfm_wf200_C0.sec', 'rb').read()).hexdigest()[:csum_width],
+         'ashort ' : hashlib.md5(open('precursors/short_8khz.wav', 'rb').read()).hexdigest()[:csum_width],
+         'minder ' : hashlib.md5(open('scriptminder.py', 'rb').read()).hexdigest()[:csum_width],
+         'myself ' : hashlib.md5(open('factory-firmware.py', 'rb').read()).hexdigest()[:csum_width],
+    }
     with canvas(oled) as draw:
-        draw.text((0, FONT_HEIGHT * 0), "Updates not yet implemented!")
-        draw.text((0, FONT_HEIGHT * 1), "Check back later.")
-    time.sleep(3)
+        draw.text((0, FONT_HEIGHT * 0), "Take photo and send to bunnie@kosagi.com:")
+        index = 0
+        line_num = 1
+        final_str = ''
+        for name, val in csums:
+             index += 1
+             final_str += "{}:{}  ".format(name, val)
+             if index % 2 == 0:
+                  draw.text((0, FONT_HEIGHT * line_num), final_str)
+                  final_str = ''
+                  line_num += 1
+     wait_start()
 
 def do_return():
      pass
