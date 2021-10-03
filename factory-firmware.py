@@ -324,14 +324,14 @@ def do_update():
     }
     if logfile:
          logfile.write("update checksums:\n")
-         for name, val in csums:
+         for name, val in csums.items():
               logfile.write("{} : {}\n".format(name, val))
     with canvas(oled) as draw:
         draw.text((0, FONT_HEIGHT * 0), "Take photo and send to bunnie@kosagi.com:")
         index = 0
         line_num = 1
         final_str = ''
-        for name, val in csums:
+        for name, val in csums.items():
              index += 1
              final_str += "{}:{}  ".format(name, val)
              if index % 2 == 0:
