@@ -339,6 +339,9 @@ def do_update():
                   final_str = ''
                   line_num += 1
     wait_start()
+    # exit -- so that the script reloads itself after the update
+    cleanup()
+    exit(0)
 
 def do_return():
      pass
