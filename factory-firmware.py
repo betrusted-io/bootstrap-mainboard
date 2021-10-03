@@ -249,8 +249,12 @@ def do_shutdown():
 
 def do_update_cmd(cmd, timeout=60):
     global environment
+    cmd_str = ''
+    for item in cmd:
+         cmd_str += item
+         cmd_str += ' '
      
-    result = subprocess.run(cmd, capture_output=True, timeout=timeout, env=environment)
+    result = subprocess.run(cmd_str, capture_output=True, timeout=timeout, env=environment)
     stdout = result.stdout.decode("utf-8").splitlines()
     stderr = result.stderr.decode("utf-8").splitlines()
     print("do_update_cmd: " + cmd + '\n' + stdout + stderr)
@@ -269,7 +273,7 @@ def do_update_cmd(cmd, timeout=60):
            draw.text((0,FONT_HEIGHT*linecnt), line, fill="white")
            linecnt = linecnt + 1
     if self.logfile:
-        self.logfile.write("do_update_cmd: {}\n".format(cmd))
+        self.logfile.write("do_update_cmd: {}\n".format(cmd_str))
         self.logfile.write(stdout.decode("utf-8"))
         self.logfile.write(stderr.decode("utf-8"))
 
