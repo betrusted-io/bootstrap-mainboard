@@ -14,4 +14,5 @@ __all__ = ["BaseTest",
            "PowerOff",
            "Zero",
            "Kill",
+           "OqcUpdate",
           ]

@@ -49,14 +49,16 @@ class Test(BaseTest):
                    with canvas(oled) as draw:
                       draw.text((0, FONT_HEIGHT*0), reason, fill="white")
                       draw.text((0, FONT_HEIGHT*1), "Operation timeout!", fill="white")
-                      self.wait_start()
+                      draw.text((0, FONT_HEIGHT*4), "Press start to continue...", fill="white")
+                   self.wait_start()
                 return passing
         if proc.poll() != 0:
             if showerror:
                with canvas(oled) as draw:
                   draw.text((0, FONT_HEIGHT*0), reason, fill="white")
                   draw.text((0, FONT_HEIGHT*1), "Did not complete!", fill="white")
-                  self.wait_start()
+                  draw.text((0, FONT_HEIGHT*4), "Press start to continue...", fill="white")
+               self.wait_start()
             passing = False
             proc.kill()
             self.reasons.append(reason)

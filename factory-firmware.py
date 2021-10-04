@@ -345,6 +345,28 @@ def do_update():
 def do_return():
      pass
 
+def do_voltage():
+     pass
+
+def do_oqc_update():
+     global oled
+     global environment
+     global IN_PROGRESS
+
+     IN_PROGRESS=True
+     while True:
+         test = OqcUpdate.Test()
+         test.set_env(environment)
+         test.reset(logfile)
+         test.run(oled)
+
+         with canvas(oled) as draw:
+              # func should already be mapped to the "abort" at this point in time
+              draw.text((0, FONT_HEIGHT * 0), "Now run 'ecup auto' on device")
+              draw.text((0, FONT_HEIGHT * 1), "Press START for another, FUNC to exit")
+         wait_start()
+     
+     
 def draw_menu(oled, menu_items, selected):
     with canvas(oled) as draw:
          line = 0
@@ -355,7 +377,7 @@ def draw_menu(oled, menu_items, selected):
                 draw.text((0, FONT_HEIGHT * line), "  " + text)
              line = line + 1
 
-         draw.text((0, FONT_HEIGHT * 4), "FUNC to change, START to select." )
+         # draw.text((0, FONT_HEIGHT * 4), "FUNC to change, START to select." )
 
      
 def do_menu():
@@ -367,8 +389,10 @@ def do_menu():
 
     menu_items = [
          ("Return to main screen", do_return),
+         ("Voltage Test Mode", do_voltage ),
+         ("OQC Update Mode", do_oqc_update),
          ("Shutdown", do_shutdown ),
-         ("Update (erases local changes on main!)", do_update ),
+         ("Upgrade tester (erases local changes!)", do_update ),
     ]
     
     oled.clear()
