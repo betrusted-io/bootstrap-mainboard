@@ -353,7 +353,7 @@ class Test(BaseTest):
             GPIO.output(GPIO_ISENSE, 1)
             if self.logfile:
                 self.logfile.write("ship current: {:.4f}uA\n".format(i_ship * 1000000))
-            if i_ship > 300e-6: # about a 70uA offset mesaured on testjig #1
+            if i_ship > 450e-6: # about a 70uA offset mesaured on testjig #1; 110uA offset on testjig #2
                 self.passing = False
                 self.add_reason("Ship mode leakage high {}uA".format(i_ship * 1000000))
         else:
