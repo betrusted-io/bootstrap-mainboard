@@ -157,4 +157,9 @@ def read_i_bat(high_range=True):
 def read_i_vbus():
     global ADC_CH
     return (read_adc128(ADC_CH["IVBUS"]) * 0.0003125)
-    
+
+def get_adc_ch_dict():
+    global ADC_CH
+
+    return ADC_CH
+

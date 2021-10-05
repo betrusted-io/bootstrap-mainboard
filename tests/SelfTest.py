@@ -259,7 +259,7 @@ class Test(BaseTest):
         ibus_nochg /= 10.0
 
         self.logfile.write("charge current: {:.4f}A\n".format(ibus_chg - ibus_nochg))
-        if ibus_chg - ibus_nochg < 0.28:
+        if ibus_chg - ibus_nochg < 0.20:
             self.passing = False
             self.add_reason("Charger I-fail / U16P BQ25618")
         

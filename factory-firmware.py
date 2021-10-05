@@ -346,7 +346,125 @@ def do_return():
      pass
 
 def do_voltage():
-     pass
+     global oled
+     global environment
+     global IN_PROGRESS
+
+     adc_scaling = {
+         "+1.8V_T"   : 1.8 / 2880.0,
+         "+1.8V_SBY" : 1.8 / 2880.0,
+         "+1.2V_EC"  : 1.2 / 1920.0,
+         "+2.5V_EC"  : 2.5 / 4000.0,
+         "+3.3V"     : 3.3 / 2640.0,
+         "+1.5V_AES" : 1.5 / 2400.0,
+         "+3.3VA"    : 3.3 / 2640.0,
+         "+V_AVA"    : 19.13 / 2782.0,
+         "+1.8V_U"   : 1.8 / 2800.0,
+         "+0.95V"    : 0.95 / 1520.0,
+         "+5V_LCD"   : 5.0 / 1860.0,
+         "V_BL"      : 19.5 / 28360.0,
+         "VBUS"      : 5.0 / 1860.0,
+     }
+     adc_ch = get_adc_ch_dict()
+
+     nominal = {
+          "+1.8V_T"   : [1.8, 1.71, 1.89],
+          "+1.8V_SBY" : [1.8, 1.7, 1.95],
+          "+1.2V_EC"  : [1.2, 1.14, 1.26],
+          "+2.5V_EC"  : [2.5, 2.3, 3.46],
+          "+3.3V"     : [3.3, 3.15, 3.465],
+          "+1.5V_AES" : [1.5, 1.425, 1.575],
+          "+3.3VA"    : [3.3, 3.15, 3.465],
+          "+V_AVA"    : [19.13, 13.2, 24.0],
+          "+1.8V_U"   : [1.8, 1.71, 1.89],
+          "+0.95V"    : [0.95, 0.92, 0.98],
+          "+5V_LCD"   : [5.0, 4.8, 5.5],
+          #"V_BL"      : [19.5, 16.0, 22.0],
+          "VBUS"      : [5.0, 4.5, 5.5],
+          "IBAT"      : [495.0, 0.0, 750.0],
+          "IBUS"      : [560.0, 1.0, 750.0]
+     }
+     display_names = {
+          "+1.8V_T"   : "18T",
+          "+1.8V_SBY" : "18SB",
+          "+1.2V_EC"  : "12EC",
+          "+2.5V_EC"  : "25EC",
+          "+3.3V"     : "33",
+          "+1.5V_AES" : "15AE",
+          "+3.3VA"    : "33A",
+          "+V_AVA"    : "AVA",
+          "+1.8V_U"   : "18U",
+          "+0.95V"    : "095",
+          "+5V_LCD"   : "5LC",
+          "V_BL"      : "BL",
+          "VBUS"      : "VBS",
+     }
+
+     IN_PROGRESS=True # this causes FUNC to abort and bring us back to main menu
+     while True:
+          with canvas(oled) as draw:
+               draw.text((0, FONT_HEIGHT * 0), "Insert DUT and press START to begin test")
+          wait_start()
+          # turn on the battery
+          GPIO.output(GPIO_BSIM, 1)
+          time.sleep(0.2)
+          # turn on the mains
+          GPIO.output(GPIO_VBUS, 1)
+
+          with canvas(oled) as draw:
+               oled.clear()
+          while GPIO.input(GPIO_START) == GPIO.LOW:
+               with canvas(oled) as draw:
+                   measurements = {}
+                   GPIO.output(GPIO_ISENSE, 1) # set to "high" range to stabilize battery voltage
+                   for channel in adc_scaling:
+                        measurements[channel] = read_adc128(adc_ch[channel]) * adc_scaling[channel] # V
+                   measurements["IBAT"] = read_i_bat(high_range=True) * 1000.0 # mA
+                   measurements["IBUS"] = read_i_vbus() * 1000.0 # mA
+
+                   row = 0
+                   col = 0
+                   colwidth = 64
+                   maxlines = 4
+                   for key, m in measurements.items():
+                        passing = True
+                        if key in nominal:
+                             lo = nominal[key][1]
+                             hi = nominal[key][2]
+                             if m < lo or m > hi:
+                                  passing = False
+
+                        if key in display_names:
+                             name = display_names[key]
+                        else:
+                             name = key
+
+                        s = name.ljust(4) + ":" + "{:.2f}".format(float(m))
+                        if passing:
+                             draw.text((col * colwidth, FONT_HEIGHT * row), s, fill="white")
+                        else:
+                             draw.rectangle(
+                                  [(col * colwidth + 1, FONT_HEIGHT * row + 1),
+                                   ((col + 1) * colwidth - 2, FONT_HEIGHT * (row + 1) - 1)],
+                                  fill="white"
+                             )
+                             draw.text((col * colwidth, FONT_HEIGHT * row), s, fill="black")
+                        row += 1
+                        if row >= maxlines:
+                             row = 0
+                             col += 1
+                   draw.text((0, FONT_HEIGHT * 4), "Hold START to pause, FUNC to exit")
+               #time.sleep(0.1)
+
+          GPIO.output(GPIO_VBUS, 0)
+          GPIO.output(GPIO_BSIM, 0)
+          # wait for operator to let go of the START switch
+          with canvas(oled) as draw:
+               oled.clear()
+               draw.text((0, FONT_HEIGHT * 0), "Let go of START switch")
+          while GPIO.input(GPIO_START) == GPIO.HIGH:
+               time.sleep(0.1)
+
 
 def do_oqc_update():
      global oled
@@ -355,6 +473,11 @@ def do_oqc_update():
 
      IN_PROGRESS=True
      while True:
+         with canvas(oled) as draw:
+              draw.text((0, FONT_HEIGHT * 0), "Plug DUT directly into USBC")
+              draw.text((0, FONT_HEIGHT * 1), "and press START to update")
+         wait_start()
+              
          test = OqcUpdate.Test()
          test.set_env(environment)
          test.reset(logfile)
