@@ -305,7 +305,7 @@ class Test(BaseTest):
         ibat_sus /= 10.0
         
         GPIO.output(GPIO_VBUS, 1) # resume system by briefly pulsing VBUS
-        time.sleep(0.5)
+        time.sleep(1.0)
         GPIO.output(GPIO_VBUS, 0)
         
         ibat_post = 0.0
@@ -325,7 +325,7 @@ class Test(BaseTest):
             self.passing = False
             self.add_reason("System did not resume as expected")
             
-        time.sleep(2) # just a moment for the resume to fully finish
+        time.sleep(3) # just a moment for the resume to fully finish
         
         ##### shipmode test
         with canvas(oled) as draw:
@@ -349,6 +349,7 @@ class Test(BaseTest):
             for i in range(10):
                time.sleep(0.1)
                i_ship += read_i_bat(high_range=False)
+               # print("ship current: {:.3f}uA".format(i_ship * 1000))
             i_ship /= 10.0
             GPIO.output(GPIO_ISENSE, 1)
             if self.logfile:
