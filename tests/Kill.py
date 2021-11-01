@@ -70,9 +70,12 @@ class Test(BaseTest):
             draw.text((0, 1), "A red light should be turned on.", fill="white")
             
         time.sleep(2.0)
-        if read_i_bat(high_range=True) > 0.040:
+        destruct_current = read_i_bat(high_range=True)
+        if destruct_current > 0.045:
             self.passing = False
-            self.add_reason("System did not self destruct")
+            self.add_reason("SD shutdown current too high {:.4f}A".format(destruct_current))
+            if self.logfile:
+                self.logfile.write("Self destruct shutdown current: {:.4f}mA\n".format(destruct_current * 1000))
 
         # print("post-kill: {} {}".format(read_i_bat(high_range=True), read_i_vbus()))
         
