@@ -345,27 +345,9 @@ def do_update():
         draw.text((0, FONT_HEIGHT * 0), "Uploading logs...")
         time.sleep(1.5)
 
-    # ensure a directory exits for the logs
-    id = hex(uuid.getnode())
-    logroot = '../test-results/'
-    logpath = '../test-results/{}/'.format(id)
-    Path(logpath).mkdir(parents=True, exist_ok=True)
-    do_update_cmd(['git', 'init'], timeout=10, cwd=logroot)
-    time.sleep(1)
-    do_update_cmd(['git', 'checkout', '-b', id], cwd=logroot)
-    time.sleep(1)
-    do_update_cmd(['git', 'remote', 'add', 'origin', 'git@github.com:betrusted-io/test-results.git'], timeout=10, cwd=logroot)
-    time.sleep(1)
-
-    # bring us up to date
-    subprocess.run(['cp', '-rf', '/home/pi/log/', logpath])
-    # add the logs
-    do_update_cmd(['git', 'add', id], timeout=10, cwd=logroot)
-    time.sleep(2)
-    do_update_cmd(['git', 'commit', '-m', 'automated commit by {} at {:%Y%b%d_%H-%M-%S}'.format(id, datetime.now())], timeout=30, cwd=logroot)
-    time.sleep(2)
-    do_update_cmd(['git', 'push', '-u', 'origin', id], timeout=120, cwd=logroot)
-    time.sleep(2)
+    # copy test logs to a restricted user on ci.betrusted.io via pre-loaded private key not in repo
+    # scp -o StrictHostKeyChecking=no -i ~/testlogs_pi * testlogs@ci.betrusted.io:
+    do_update_cmd(['scp', '-o', 'StrictHostKeyChecking=no', '-i', '/home/pi/testlogs_pi', '/home/pi/logs/*', 'testlogs@ci.betrusted.io:'], timeout=90)
     
     # exit -- so that the script reloads itself after the update
     exit(0)
@@ -585,7 +567,7 @@ def main():
 
     if args.log:
         try:
-             logfile = open('/home/pi/log/{:%Y%b%d_%H-%M-%S}.log'.format(datetime.now()), 'w')
+             logfile = open('/home/pi/log/{}_{:%Y%b%d_%H-%M-%S}.log'.format(hex(uuid.getnode()), datetime.now()), 'w')
         except:
              logfile = None # don't crash if the fs is full, the show must go on!
     else:
