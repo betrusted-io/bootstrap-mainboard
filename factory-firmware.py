@@ -346,13 +346,13 @@ def do_update():
         time.sleep(1.5)
 
     # ensure a directory exits for the logs
-    uuid = hex(uuid.getnode())
+    id = hex(uuid.getnode())
     logroot = '../test-results/'
-    logpath = '../test-results/{}/'.format(uuid)
+    logpath = '../test-results/{}/'.format(id)
     Path(logpath).mkdir(parents=True, exist_ok=True)
     do_update_cmd(['git', 'init'], timeout=10, cwd=logroot)
     time.sleep(1)
-    do_update_cmd(['git', 'checkout', '-b', uuid], cwd=logroot)
+    do_update_cmd(['git', 'checkout', '-b', id], cwd=logroot)
     time.sleep(1)
     do_update_cmd(['git', 'remote', 'add', 'origin', 'git@github.com:betrusted-io/test-results.git'], timeout=10, cwd=logroot)
     time.sleep(1)
@@ -360,11 +360,11 @@ def do_update():
     # bring us up to date
     subprocess.run(['cp', '-rf', '/home/pi/log/*', logpath])
     # add the logs
-    do_update_cmd(['git', 'add', hex(uuid.getnode())], timeout=10, cwd=logroot)
+    do_update_cmd(['git', 'add', id], timeout=10, cwd=logroot)
     time.sleep(2)
-    do_update_cmd(['git', 'commit', '-m', 'automated commit by {} at {:%Y%b%d_%H-%M-%S}'.format(uuid, datetime.now())], timeout=30, cwd=logroot)
+    do_update_cmd(['git', 'commit', '-m', 'automated commit by {} at {:%Y%b%d_%H-%M-%S}'.format(id, datetime.now())], timeout=30, cwd=logroot)
     time.sleep(2)
-    do_update_cmd(['git', 'push', '-u', 'origin', uuid], timeout=120, cwd=logroot)
+    do_update_cmd(['git', 'push', '-u', 'origin', id], timeout=120, cwd=logroot)
     time.sleep(2)
     
     # exit -- so that the script reloads itself after the update
