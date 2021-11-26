@@ -347,7 +347,7 @@ def do_update():
 
     # copy test logs to a restricted user on ci.betrusted.io via pre-loaded private key not in repo
     # scp -o StrictHostKeyChecking=no -i ~/testlogs_pi * testlogs@ci.betrusted.io:
-    do_update_cmd(['scp', '-o', 'StrictHostKeyChecking=no', '-i', '/home/pi/testlogs_pi', '-r', '/home/pi/log/', 'testlogs@ci.betrusted.io:'], timeout=90)
+    do_update_cmd(['scp', '-o', 'StrictHostKeyChecking=no', '-i', '/home/pi/testlogs_pi', '-rf', '/home/pi/log/', 'testlogs@ci.betrusted.io:'], timeout=90)
     
     # exit -- so that the script reloads itself after the update
     exit(0)
