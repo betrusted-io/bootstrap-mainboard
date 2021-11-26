@@ -15,6 +15,8 @@ import RPi.GPIO as GPIO
 from luma.oled.device import ssd1322
 import luma.oled.device
 import hashlib
+from pathlib import Path
+import uuid
 
 from gpiodefs import *
 from adc128 import *
@@ -248,7 +250,7 @@ def do_shutdown():
     subprocess.run(['sudo', 'shutdown', '-h', 'now'])
     time.sleep(15)
 
-def do_update_cmd(cmd, timeout=60):
+def do_update_cmd(cmd, timeout=60, cwd=None):
     global environment
     global logfile
     cmd_str = ''
@@ -256,7 +258,7 @@ def do_update_cmd(cmd, timeout=60):
          cmd_str += item
          cmd_str += ' '
      
-    result = subprocess.run(cmd, capture_output=True, timeout=timeout, env=environment)
+    result = subprocess.run(cmd, capture_output=True, timeout=timeout, env=environment, cwd=cwd)
     stdout = result.stdout.decode("utf-8").splitlines()
     stderr = result.stderr.decode("utf-8").splitlines()
     print("do_update_cmd: " + cmd_str)
@@ -339,6 +341,32 @@ def do_update():
                   final_str = ''
                   line_num += 1
     wait_start()
+    with canvas(oled) as draw:
+        draw.text((0, FONT_HEIGHT * 0), "Uploading logs...")
+        time.sleep(1.5)
+
+    # ensure a directory exits for the logs
+    uuid = hex(uuid.getnode())
+    logroot = '../test-results/'
+    logpath = '../test-results/{}/'.format(uuid)
+    Path(logpath).mkdir(parents=True, exist_ok=True)
+    do_update_cmd(['git', 'init'], timeout=10, cwd=logroot)
+    time.sleep(1)
+    do_update_cmd(['git', 'checkout', '-b', uuid], cwd=logroot)
+    time.sleep(1)
+    do_update_cmd(['git', 'remote', 'add', 'origin', 'git@github.com:betrusted-io/test-results.git'], timeout=10, cwd=logroot)
+    time.sleep(1)
+
+    # bring us up to date
+    subprocess.run(['cp', '-rf', '/home/pi/log/*', logpath])
+    # add the logs
+    do_update_cmd(['git', 'add', hex(uuid.getnode())], timeout=10, cwd=logroot)
+    time.sleep(2)
+    do_update_cmd(['git', 'commit', '-m', 'automated commit by {} at {:%Y%b%d_%H-%M-%S}'.format(uuid, datetime.now())], timeout=30, cwd=logroot)
+    time.sleep(2)
+    do_update_cmd(['git', 'push', '-u', 'origin', uuid], timeout=120, cwd=logroot)
+    time.sleep(2)
+    
     # exit -- so that the script reloads itself after the update
     exit(0)
 
