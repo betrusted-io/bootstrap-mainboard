@@ -358,7 +358,7 @@ def do_update():
     time.sleep(1)
 
     # bring us up to date
-    subprocess.run(['cp', '-rf', '/home/pi/log/*', logpath])
+    subprocess.run(['cp', '-rf', '/home/pi/log/', logpath])
     # add the logs
     do_update_cmd(['git', 'add', id], timeout=10, cwd=logroot)
     time.sleep(2)
