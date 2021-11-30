@@ -217,15 +217,18 @@ def run_tests(tests, logfile=None):
             logfile.write(note + "\n")
             logfile.flush()
 
+    if passing != True:
+        if logfile:
+            logfile.write("Fail reasons given:\n")
+            for test in tests:
+                reasons = test.fail_reasons()
+                for reason in reasons:
+                    logfile.write(reason + "\n")
+                logfile.flush()
+
     wait_start()
     
     if passing != True:
-        if logfile:
-            reasons = test.fail_reasons()
-            logfile.write("Fail reasons given:\n")
-            for reason in reasons:
-                logfile.write(reason + "\n")
-            logfile.flush()
         with canvas(oled) as draw:
             for test in tests:
                 if test.is_passing() != True:

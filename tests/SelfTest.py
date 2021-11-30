@@ -376,10 +376,11 @@ class Test(BaseTest):
         self.slow_send("sleep ship\r")
         # spec time is 15 seconds max before in ship mode
         did_ship = False
-        for x in range(16, 0, -1):
+        for x in range(18, 0, -1):
             with canvas(oled) as draw:
                 draw.text((0, 0), "Wait for BQ25618...{}".format(x), fill="white")
             time.sleep(1.0)
+            # print('ship measure: {}'.format(read_i_bat(high_range=True)))
             if read_i_bat(high_range=True) < 0.005:
                 did_ship = True
                 break
