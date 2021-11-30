@@ -37,19 +37,19 @@ class Test(BaseTest):
         
         if False == self.run_nonblocking(oled,
                ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', self.fpga, '--raw-binary', '--spi-mode', '-r'],
-               reason="FPGA bitstream burn failure", timeout=60, title='FPGA bitstream:'):
+               reason="FPGA bitstream burn failure", timeout=80, title='FPGA bitstream:'):
             return self.passing
 
         
         if False == self.run_nonblocking(oled,
                ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', self.loader, '--raw-binary', '-a', '0x500000', '-s', '-r'],
-               reason="Loader burn failure", timeout=60, title='Loader:'):
+               reason="Loader burn failure", timeout=80, title='Loader:'):
             return self.passing
 
         
         if False == self.run_nonblocking(oled,
                ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', self.kernel, '--raw-binary', '-a', '0x980000', '-s', '-r', '-n'],
-               reason="Kernel burn failure", timeout=60, title='Kernel:'):
+               reason="Kernel burn failure", timeout=120, title='Kernel:'):
             return self.passing
 
         time.sleep(0.5)
