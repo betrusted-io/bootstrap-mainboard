@@ -49,7 +49,7 @@ class Test(BaseTest):
         
         if False == self.run_nonblocking(oled,
                ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', self.kernel, '--raw-binary', '-a', '0x980000', '-s', '-r', '-n'],
-               reason="Kernel burn failure", timeout=120, title='Kernel:'):
+               reason="Kernel burn failure", timeout=180, title='Kernel:'):
             return self.passing
 
         time.sleep(0.5)
