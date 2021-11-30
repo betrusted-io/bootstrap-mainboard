@@ -71,7 +71,7 @@ class Test(BaseTest):
             
         time.sleep(2.0)
         destruct_current = read_i_bat(high_range=True)
-        if destruct_current > 0.045:
+        if destruct_current > 0.095:
             self.passing = False
             self.add_reason("SD shutdown current too high {:.4f}A".format(destruct_current))
             if self.logfile:
