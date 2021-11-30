@@ -125,6 +125,7 @@ class Test(BaseTest):
         #### run the primary self-test
         self.try_cmd("test factory\r", "|TSTR|DONE") 
         results = self.console.before.decode('utf-8', errors='ignore')
+        tests_seen = []
         for line in results.split('\r'):
             if 'TSTR|' in line:
                 if self.logfile:
@@ -132,6 +133,7 @@ class Test(BaseTest):
                 #print(line.rstrip())
                 test_output = line.split('|')
                 if test_output[2] == 'ECREV':
+                    tests_seen.append(test_output[2])
                     if test_output[3] == 'ffffffff':
                          self.passing = False
                          self.add_reason("U11K/U10K programming failure")
@@ -142,14 +144,17 @@ class Test(BaseTest):
                          self.add_reason("or U14W/U12W/U17P/U11P I2C fail")
                          return self.passing # severe error, abort test immediately
                 if test_output[2] == 'GYRO':
+                    tests_seen.append(test_output[2])
                     if int(test_output[6]) != 0x6A: # id code = 0x6A == LSM6DSLTR; previous rev is 0x69 == LSM6DS3.
                         self.passing = False
                         self.add_reason("U14W Gyro fail")
                 if test_output[2] == 'WF200REV':
+                    tests_seen.append(test_output[2])
                     if int(test_output[3]) != 3 or int(test_output[4]) != 12 or int(test_output[5]) != 3:
                         self.passing = False
                         self.add_reason("U10W WF200 fw rev fail")
                 if test_output[2] == 'BATTSTATS':
+                    tests_seen.append(test_output[2])
                     stats = ast.literal_eval(test_output[3])
                     if stats[11] != 44: # id code
                         self.passing = False
@@ -159,10 +164,12 @@ class Test(BaseTest):
                         self.passing = False
                         self.add_reason("U11P BQ27421 fail")
                 if test_output[2] == 'USBCC':
+                    tests_seen.append(test_output[2])
                     if int(test_output[5]) != 2:
                         self.passing = False
                         self.add_reason("U16P TUSB320 fail")
                 if test_output[2] == 'TRNG':
+                    tests_seen.append(test_output[2])
                     if test_output[3] != 'PASS':
                         self.passing = False
                         if test_output[4] == 'AV0':
@@ -172,22 +179,57 @@ class Test(BaseTest):
                         if test_output[4] == 'RO':
                             self.add_reason("U11F Ring Osc fail")
                 if test_output[2] == 'VCCINT':
+                    tests_seen.append(test_output[2])
                     if test_output[3] != 'PASS':
                         self.passing = False
                         self.add_reason("VCCINT {} fail (U12F)".format(test_output[4]))
                 if test_output[2] == 'VCCAUX':
+                    tests_seen.append(test_output[2])
                     if test_output[3] != 'PASS':
                         self.passing = False
                         self.add_reason("VCCAUX {} fail (U13F)".format(test_output[4]))
                 if test_output[2] == 'VCCBRAM':
+                    tests_seen.append(test_output[2])
                     if test_output[3] != 'PASS':
                         self.passing = False
                         self.add_reason("VCCBRAM {} fail (U12F)".format(test_output[4]))
                 if test_output[2] == 'ECRESET':
+                    tests_seen.append(test_output[2])
                     if test_output[3] != 'PASS':
                         self.passing = False
                         self.add_reason("ECRESET fail (Q18F/U11K/U10K)")
-                        
+
+        if 'ECREV' not in tests_seen:
+            self.passing = False
+            self.add_reason("ECREV did not run (U11K/U10k)")
+        if 'GYRO' not in tests_seen:
+            self.passing = False
+            self.add_reason("GYRO did not run (U14W)")
+        if 'WF200REV' not in tests_seen:
+            self.passing = False
+            self.add_reason("WF200REV did not run (U10W)")
+        if 'BATTSTATS' not in tests_seen:
+            self.passing = False
+            self.add_reason("BATTSTATS did not run (U11P)")
+        if 'USBCC' not in tests_seen:
+            self.passing = False
+            self.add_reason("USBCC did not run (U16P)")
+        if 'TRNG' not in tests_seen:
+            self.passing = False
+            self.add_reason("TRNG did not run (U11R, U12R/D11R, U10R/D10R)")
+        if 'VCCINT' not in tests_seen:
+            self.passing = False
+            self.add_reason("VCCINT did not run (U12F)")
+        if 'VCCAUX' not in tests_seen:
+            self.passing = False
+            self.add_reason("VCCAUX did not run (U12F)")
+        if 'VCCBRAM' not in tests_seen:
+            self.passing = False
+            self.add_reason("VCCBRAM did not run (U12F)")
+        if 'ECRESET' not in tests_seen:
+            self.passing = False
+            self.add_reason("ECRESET did not run (Q18F/U11K/U10K)")
+             
         with canvas(oled) as draw:
             draw.text((0, 0), "Selftest / Backlight...", fill="white")
 
