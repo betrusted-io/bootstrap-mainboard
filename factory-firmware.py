@@ -370,7 +370,7 @@ def do_voltage():
          "+2.5V_EC"  : 2.529 / 4064.0, # cal
          "+3.3V"     : 3.305 / 2672.0, # cal
          "+1.5V_AES" : 1.501 / 2512.0, # cal
-         "+3.3VA"    : 3.313 / 2650.0, # cal
+         "+3.3VA"    : 3.305 / 2672.0, # infer
          "+V_AVA"    : 3.293 / 495.0,  # cal
          "+1.8V_U"   : 1.802 / 3000.0, # cal
          "+0.95V"    : 0.95 / 1520.0, # cal -> 0.952 measured, too precise
@@ -387,7 +387,7 @@ def do_voltage():
           "+2.5V_EC"  : [2.5, 2.3, 3.46],
           "+3.3V"     : [3.3, 3.12, 3.465],
           "+1.5V_AES" : [1.5, 1.415, 1.575],
-          "+3.3VA"    : [3.3, 3.15, 3.465],
+          "+3.3VA"    : [3.3, 3.15, 3.51], # this channel seems to drift high due to noise. suspect cross-coupling issue with adjacent channel.
           "+V_AVA"    : [19.13, 2.0, 24.0], # it's off when idle, avoid confusing the operator
           "+1.8V_U"   : [1.8, 1.68, 1.89],
           "+0.95V"    : [0.95, 0.91, 0.98],
