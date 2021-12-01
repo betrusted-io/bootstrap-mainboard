@@ -176,18 +176,19 @@ def run_tests(tests, logfile=None):
     global environment
 
     elapsed_start = time.time()
-    # each test runs, and can draw onto the screen for status updates
-    # they return a simple pass/fail result, and if not passing, the full sequence aborts
+    # reset the tests, all of them, before they can fail
     for test in tests:
         test.set_env(environment) # make sure each command has a clean copy of their runtime environment
         test.reset(logfile)     # reset the test state before running it. this also resets the start timer.
-        passed = test.run(oled)
+    # each test runs, and can draw onto the screen for status updates
+    # they return a simple pass/fail result, and if not passing, the full sequence aborts
+    for test in tests:
         with canvas(oled) as draw:
             draw.text((0, FONT_HEIGHT * 4), "Test: {:.2f}s Total: {:.2f}s".format(time.time() - test.start, time.time() - elapsed_start))
         time.sleep(0.5)
         if logfile:
             logfile.flush()
-        if passed != True or passed == None or passed == False:
+        if test.is_passing() != True:
             break
     elapsed = time.time() - elapsed_start
 
@@ -200,7 +201,16 @@ def run_tests(tests, logfile=None):
     with canvas(oled) as draw:
         oled.clear()
         for test in tests:
-            draw.text((col * colwidth, FONT_HEIGHT * row), test.short_status())
+            if test.is_passing() == True:
+                draw.text((col * colwidth, FONT_HEIGHT * row), test.short_status(), fill="white")
+            else:
+                draw.rectangle(
+                     [(col * colwidth + 1, FONT_HEIGHT * row + 1),
+                      ((col + 1) * colwidth - 2, FONT_HEIGHT * (row + 1) - 1)],
+                     fill="white"
+                )
+                draw.text((col * colwidth, FONT_HEIGHT * row), test.short_status(), fill="black")
+                 
             if test.is_passing() != True:
                 passing = False
             row += 1
@@ -210,9 +220,15 @@ def run_tests(tests, logfile=None):
 
         if passing:
             note = "PASS. Ran for {:.2f}s. Press START.".format(elapsed)
+            draw.text((0, FONT_HEIGHT * 4), note)
         else:
             note = "FAIL. Ran for {:.2f}s. Press START.".format(elapsed)
-        draw.text((0, FONT_HEIGHT * 4), note)
+            draw.rectangle(
+                 [(0, FONT_HEIGHT * 4 + 1),
+                  (255, FONT_HEIGHT * (4 + 1) - 1)],
+                 fill="white"
+            )
+            draw.text((0, FONT_HEIGHT * 4), note, fill="black")
         if logfile:
             logfile.write(note + "\n")
             logfile.flush()
