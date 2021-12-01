@@ -187,7 +187,7 @@ def run_tests(tests, logfile=None):
         time.sleep(0.5)
         if logfile:
             logfile.flush()
-        if passed != True:
+        if passed != True or passed == None or passed == False:
             break
     elapsed = time.time() - elapsed_start
 
