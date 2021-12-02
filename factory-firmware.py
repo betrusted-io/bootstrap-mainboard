@@ -183,6 +183,7 @@ def run_tests(tests, logfile=None):
     # each test runs, and can draw onto the screen for status updates
     # they return a simple pass/fail result, and if not passing, the full sequence aborts
     for test in tests:
+        test.run(oled)
         with canvas(oled) as draw:
             draw.text((0, FONT_HEIGHT * 4), "Test: {:.2f}s Total: {:.2f}s".format(time.time() - test.start, time.time() - elapsed_start))
         time.sleep(0.5)
