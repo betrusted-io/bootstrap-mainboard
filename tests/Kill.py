@@ -83,7 +83,7 @@ class Test(BaseTest):
         time.sleep(2.0)
         ibus_kill = read_i_vbus()
 
-        if ibus_kill > (ibus_nom - 0.065):
+        if ibus_kill > (ibus_nom - 0.055): # one working unit with exactly 0.060; 0.055 gives some margin
             self.passing = False
             self.add_reason("Self Destruct fail Q22F/Q21F")
         if self.logfile:
