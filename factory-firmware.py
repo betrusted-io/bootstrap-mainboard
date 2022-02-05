@@ -634,7 +634,7 @@ def main():
                if time.time() - elapsed > 1.0:
                     elapsed = time.time()
                     with canvas(oled) as draw:
-                       draw.text((0, FONT_HEIGHT * 0), "Tester version {}.{} {:x}+{}".format(major, minor, gitrev, gitextra), fill="white")
+                       draw.text((0, FONT_HEIGHT * 0), "Tester version {}.{}.{} {:x}+{}".format(major, minor, rev, gitrev, gitextra), fill="white")
                        draw.text((0, FONT_HEIGHT * 1), "Tests run since last abort/restart: {}".format(loops), fill="white")
                        draw.text((0, FONT_HEIGHT * 2), ">>>>> Press START to run test <<<<<", fill="white")
                        draw.text((0, FONT_HEIGHT * 3), "{}".format(str(datetime.now())), fill="white")
