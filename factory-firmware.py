@@ -65,7 +65,7 @@ def get_tests():
        #tests.append(SocFirmware.Test())
        tests.append(SelfTest.Test())
        #tests.append(AudioTest.Test())
-       tests.append(Kill.Test())
+       #tests.append(Kill.Test())
     
     tests.append(PowerOff.Test())
     return tests

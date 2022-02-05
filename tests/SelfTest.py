@@ -39,6 +39,7 @@ class Test(BaseTest):
         
     def run(self, oled):
         global VIBE_HAPPENED
+        BOOT_WAIT_SECS = 9.0  # time to wait for a boot to happen before issuing commands
         
         self.passing = True
         self.has_run = True
@@ -86,13 +87,13 @@ class Test(BaseTest):
 
         # wait for boot to finish
         try:
-            self.console.expect_exact("|status: starting main loop", 20)
+            self.console.expect_exact("|status: starting main loop", 30)
         except Exception as e:
             self.passing = False
             self.add_reason("OS did not boot in time")
             return self.passing
 
-        time.sleep(5) # give a little time for init scripts to finish running
+        time.sleep(BOOT_WAIT_SECS) # give a little time for init scripts to finish running
 
         #### at this moment, VBUS is off. test boost mode.
         with canvas(oled) as draw:
@@ -367,7 +368,7 @@ class Test(BaseTest):
             self.passing = False
             self.add_reason("System did not resume as expected")
             
-        time.sleep(3) # just a moment for the resume to fully finish
+        time.sleep(BOOT_WAIT_SECS) # just a moment for the resume to fully finish
         
         ##### shipmode test
         with canvas(oled) as draw:
