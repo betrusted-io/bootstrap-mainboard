@@ -55,7 +55,7 @@ class Test(BaseTest):
         time.sleep(0.5)
         GPIO.output(GPIO_VBUS, 0)
         
-        time.sleep(6.0) # total time required from boot to command acceptance
+        time.sleep(10.0) # total time required from boot to command acceptance
         self.console = fdspawn(ser)        
         self.try_cmd("test wfioff\r", "|TSTR|WFIOFF")
         self.console.close()

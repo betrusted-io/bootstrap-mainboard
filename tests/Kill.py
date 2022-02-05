@@ -53,7 +53,7 @@ class Test(BaseTest):
         time.sleep(0.5)
         GPIO.output(GPIO_VBUS, 1)
         
-        time.sleep(6.0)
+        time.sleep(9.0)
 
         ibus_nom = read_i_vbus()
         #print("pre-kill: {} {}".format(ibat_nom, read_i_vbus()))
