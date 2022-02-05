@@ -43,7 +43,7 @@ class Test(BaseTest):
             draw.text((0, 0), "Audio / Power on...", fill="white")
         GPIO.output(GPIO_VBUS, 1)
 
-        time.sleep(5) # give a little time for the device to boot
+        time.sleep(9) # give a little time for the device to boot
 
         # open a serial terminal
         ser = serial.Serial()
