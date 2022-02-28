@@ -13,7 +13,7 @@ sleep 0.5
 sudo betrusted-scripts/vbus.sh 1
 
 echo "erasing SOC flash"
-cd betrusted-scripts/jtag-tools && ./jtag_gpio.py -f pecursors/blank.bin --erase -a 0 --erase-len=0xf80000 -r
+cd betrusted-scripts/jtag-tools && ./jtag_gpio.py -f precursors/blank.bin --erase -a 0 --erase-len=0xf80000 -r
 
 cd ../..
 

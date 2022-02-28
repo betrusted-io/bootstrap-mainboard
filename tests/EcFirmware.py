@@ -20,6 +20,15 @@ class Test(BaseTest):
         self.has_run = True
 
         with canvas(oled) as draw:
+            draw.text((0, 0), "Stop SoC boot...", fill="white")
+        time.sleep(0.5)
+
+        if False == self.run_nonblocking(oled,
+               ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', 'precursors/blank.bin', '--raw-binary', '--spi-mode', '-r'],
+               reason="Stop SoC boot failed", timeout=20, title='Ensure SoC blank...'):
+            return self.passing
+
+        with canvas(oled) as draw:
             draw.text((0, 0), "Burning WFX firmware...", fill="white")
         time.sleep(0.5)
 
