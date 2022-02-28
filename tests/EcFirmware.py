@@ -21,7 +21,7 @@ class Test(BaseTest):
 
         with canvas(oled) as draw:
             draw.text((0, 0), "Stop SoC boot...", fill="white")
-        time.sleep(0.5)
+        time.sleep(0.2)
 
         if False == self.run_nonblocking(oled,
                ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', 'precursors/blank_short.bin', '--raw-binary', '--spi-mode', '-r'],
