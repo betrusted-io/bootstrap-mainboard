@@ -24,7 +24,7 @@ class Test(BaseTest):
         time.sleep(0.2)
 
         if False == self.run_nonblocking(oled,
-               ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', 'precursors/blank_short.bin', '--raw-binary', '--spi-mode', '-r'],
+               ['betrusted-scripts/jtag-tools/jtag_gpio.py', '-f', 'precursors/blank_short.bin', '--erase', '-a', '0', '--erase-len=0x1000', '-r'],
                reason="Stop SoC boot failed", timeout=20, title='Ensure SoC blank...'):
             return self.passing
 
