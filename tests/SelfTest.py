@@ -381,7 +381,7 @@ class Test(BaseTest):
             with canvas(oled) as draw:
                 draw.text((0, 0), "Wait for BQ25618...{}".format(x), fill="white")
             time.sleep(1.0)
-            # print('ship measure: {}'.format(read_i_bat(high_range=True)))
+            print('ship measure: {}'.format(read_i_bat(high_range=True)))
             if read_i_bat(high_range=True) < 0.005:
                 did_ship = True
                 break
@@ -393,7 +393,7 @@ class Test(BaseTest):
             for i in range(10):
                time.sleep(0.1)
                i_ship += read_i_bat(high_range=False)
-               # print("ship current: {:.3f}uA".format(i_ship * 1000))
+               print("ship current: {:.3f}uA".format(i_ship * 1000))
             i_ship /= 10.0
             GPIO.output(GPIO_ISENSE, 1)
             if self.logfile:
