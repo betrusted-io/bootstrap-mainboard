@@ -19,8 +19,11 @@ you may want to install more:
   Note: you can also plug the USB-C port directly into your host, in which case you would
   need the `wishbone-utils` on your host, not the Rpi with debug HAT. x86-hosted `wishbone-utils`
   is actually the more typical use case.
-- Factory test: [Luma OLED](https://luma-oled.readthedocs.io/en/latest/software.html). Generally,
+- Factory test: 
+  - `pip3 install luma.oled` -- [Luma OLED](https://luma-oled.readthedocs.io/en/latest/software.html). Generally,
   you don't want to run the factory test, as you don't have the rather expensive accompanying
   PCB with all the sensors and adapters to make it work.
+  - `pip3 install pexpect`
   - `pip3 install psutil` -- for the scriptminder.py routine
+  - `raspi-config` -- enable serial port (and disable login shell on it), SPI, I2C.
   
