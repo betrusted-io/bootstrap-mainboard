@@ -69,7 +69,7 @@ class Test(BaseTest):
 
         oled.clear()
         line = 0
-        ibat_max = 0.250
+        ibat_max = 0.290
         ibat_min = 0.180
 
         ibat_avg = 0.0
