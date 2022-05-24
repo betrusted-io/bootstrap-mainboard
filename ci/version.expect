@@ -1,0 +1,73 @@
+#!/usr/bin/expect
+
+set expected_maj 0
+set expected_min 9
+set expected_rev 8
+
+set timeout 15
+
+# tty speed set by upstream script
+spawn -open [open /dev/ttyS0 w+]
+
+expect {
+    -re {\_\|TT\|\_PDDB.SKIPMOUNT,.*\_\|TE\|\_} {
+	puts "skipmount"
+	after 1000
+	exec echo -n -e "ver ec\r" > /dev/ttyS0
+	exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_VER.EC,.*\_\|TE\|\_} {
+	puts "ecrev"
+        set ecrev [split $expect_out(0,string) ","]
+        set ecrev_maj [lindex $ecrev 1]
+        set ecrev_min [lindex $ecrev 2]
+        set ecrev_rev [lindex $ecrev 3]
+        set ecrev_ext [lindex $ecrev 4]
+	after 1000
+	exec echo -n -e "ver soc\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_VER.SOC,.*\_\|TE\|\_} {
+	puts "socrev"
+        set socrev [split $expect_out(0,string) ","]
+        set socrev_maj [lindex $socrev 1]
+        set socrev_min [lindex $socrev 2]
+        set socrev_rev [lindex $socrev 3]
+        set socrev_ext [lindex $socrev 4]
+	after 1000
+	exec echo -n -e "ver xous\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_VER.XOUS,.*\_\|TE\|\_} {
+	puts "xousrev"
+        set xousrev [split $expect_out(0,string) ",\n\r"]
+        set xousrevs [lindex $xousrev 1]
+	puts $xousrevs
+	set xousrevstr [string trim $xousrevs "v"]
+	puts $xousrevstr
+	set xousrevcomp [split $xousrevstr, .-]
+	puts $xousrevcomp
+	set xousrev_maj [lindex $xousrevcomp 0]
+	set xousrev_min [lindex $xousrevcomp 1]
+	set xousrev_rev [lindex $xousrevcomp 2]
+    }
+}
+
+puts "ecrev detected: $ecrev_maj.$ecrev_min.$ecrev_rev+$ecrev_ext"
+puts "socrev detected: $socrev_maj.$socrev_min.$socrev_rev+$socrev_ext"
+puts "xousrev detected: $xousrevstr -> $xousrev_maj.$xousrev_min.$xousrev_rev"
+
+if { $ecrev_maj == $expected_maj
+     && $ecrev_min == $expected_min
+     && $ecrev_rev == $expected_rev
+     && $socrev_maj == $expected_maj
+     && $socrev_min == $expected_min
+     && $socrev_rev == $expected_rev
+     && $xousrev_maj == $expected_maj
+     && $xousrev_min == $expected_min
+     && $xousrev_rev == $expected_rev } {
+    exit 0
+} else {
+    exit 1
+}
+    
