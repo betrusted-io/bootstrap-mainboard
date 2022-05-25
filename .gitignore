@@ -130,3 +130,6 @@ dmypy.json
 
 # emacs droppings
 *~
+
+# credentials for testing
+ci/credentials.txt
