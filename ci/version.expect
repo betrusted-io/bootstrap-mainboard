@@ -4,10 +4,17 @@ set expected_maj 0
 set expected_min 9
 set expected_rev 8
 
-set timeout 15
+set timeout 30
 
-# tty speed set by upstream script
+# ASSUME: power is on
+# ASSUME: tty speed set
 spawn -open [open /dev/ttyS0 w+]
+# ASSUME: reset is setup
+after 500
+exec echo 0 > /sys/class/gpio/gpio24/value
+after 200
+exec echo 1 > /sys/class/gpio/gpio24/value
+
 
 expect {
     -re {\_\|TT\|\_PDDB.SKIPMOUNT,.*\_\|TE\|\_} {
