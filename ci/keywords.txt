@@ -5,7 +5,7 @@ ROOTKEY.UPDPW   prompt for update password
 ROOTKEY.INITDONE finished with initializing keys
 
 PDDB.BADPW 	bad pddb password
-PDDB.MOUNTED	PDDB mounted successfull
+PDDB.MOUNTED	PDDB mounted successful
 PDDB.SKIPMOUNT	PDDD mount bypassed because no rootkeys
 PDDB.REQFMT	PDDB format request
 PDDB.CHECKPASS  check password notification
