@@ -1,0 +1,138 @@
+#!/usr/bin/expect
+
+set timeout 120
+set ntppassing 0
+set netpassing 0
+set gotntp 0
+
+# ASSUME: power is on
+# ASSUME: tty speed set by upstream script
+spawn -open [open /dev/ttyS0 w+]
+# ASSUME: reset is setup
+after 500
+exec echo 0 > /sys/class/gpio/gpio24/value
+after 200
+exec echo 1 > /sys/class/gpio/gpio24/value
+
+expect {
+    -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
+	# enter the boot password
+	after 500
+	exec echo -n -e "test\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_NET.OK,.*\_\|TE\|\_} {
+	# select set time menu entry
+	after 500
+	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
+	after 300
+	for {set i 0} {$i < 6} {incr i} {
+	    exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
+	    after 150
+	}
+	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
+	after 150
+	exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_RTC.TZ,.*\_\|TE\|\_} {
+	# set the timezone to UTC+8
+	after 500
+	exec echo -n -e "8\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_RTC.NTP,.*\_\|TE\|\_} {
+	# select "yes" when asked if we want to use NTP
+	after 500
+	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
+	after 150
+	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
+	after 150
+	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
+	after 150
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_RTC.NTPFAIL,.*\_\|TE\|\_} {
+	puts "NTP failed"
+	set gotntp 0
+    }
+    -re {\_\|TT\|\_RTC.NTPOK,.*\_\|TE\|\_} {
+	puts "NTP succeeded"
+	set gotntp 1
+    }
+    
+}
+if { $gotntp == 1 } {
+    after 1000
+    exec echo -n -e "rtc local\r" > /dev/ttyS0
+    set systemtime [clock seconds]
+    # check that the time is right
+    set timeout 20
+    expect {
+	-re {\_\|TT\|\_RTC.LOCAL,.*\_\|TE\|\_} {
+	    set timestr [split $expect_out(0,string) ","]
+	    set hours [lindex $timestr 1]
+	    set mins  [lindex $timestr 2]
+	    set month [lindex $timestr 3]
+	    set day   [lindex $timestr 4]
+	    set year  [lindex $timestr 5]
+	    set hoursdiff [expr abs([expr $hours - [clock format $systemtime -format %H]])]
+	    set minsdiff [expr abs([expr $mins - [clock format $systemtime -format %M]])]
+	    puts "Local time: [clock format $systemtime -format {%H:%M %m/%d/%Y}]"
+	    puts "DUT time: $hours:$mins $month/$day/$year"
+	    puts $hoursdiff
+	    puts $minsdiff
+	    # this will fail if the test was done at the stroke of midnight
+	    if {$month == [clock format $systemtime -format %m]
+		&& $day == [clock format $systemtime -format %d]
+		&& $year == [clock format $systemtime -format %Y]
+		&& ($hoursdiff == 0 ||
+		    ($hoursdiff == 1 && $minsdiff == 59)
+		   )
+		&& ($minsdiff == 59 || $minsdiff <= 1)
+	    } {
+		puts "NTP Passed"
+		set ntppassing 1
+	    } else {
+		puts "NTP Failed"
+		set ntppassing 0
+	    }
+	}
+    }
+}
+after 1000
+set timeout 5
+exec echo -n -e "net server\r" > /dev/ttyS0
+expect {
+    # catch cases of net server not starting due to stdlib integration errors
+    "panic" {
+	set netpassing 0
+    }
+    "PANIC" {
+	set netpassing 0
+    }
+    "Panic" {
+	set netpassing 0
+    }
+    -re {\_\|TT\|\_NET.SERVER,.*\_\|TE\|\_} {
+	puts "server started, moving to next stage"
+    }
+}
+after 1000
+set timeout 20
+exec echo -n -e "net tcpget bunniefoo.com/bunnie/ci.txt\r" > /dev/ttyS0
+expect {
+    -re {\_\|TT\|\_FETCHOK,.*\_\|TE\|\_} {
+	# note that FETCHOK comes from the fetched file, not the command itself
+	# the command itself will return NET.TCPGET, but we ignore it
+	puts "got test string from remote server"
+	set netpassing 1
+    }
+}
+
+if { $netpassing == 1 && $ntppassing == 1 } {
+    puts "Net test pass"
+    exit 0
+} else {
+    puts "Net test fail"
+    exit 1
+}

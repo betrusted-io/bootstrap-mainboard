@@ -27,7 +27,7 @@ RTC.FAIL     	      	     query failed
 RTC.TZ                       prompt for timezone entry
 RTC.NTP                      yes/no prompt for NTP use
 RTC.NTPFAIL                  ntp setting failed
-RTC.OK                       ntp setting succeeded
+RTC.NTPOK                    ntp setting succeeded
 
 
 echo -n -e $'\e'\[1~ > /dev/ttyS0  # home

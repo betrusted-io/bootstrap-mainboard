@@ -2,6 +2,13 @@
 
 # set the baud rate
 stty -F /dev/ttyS0 115200
+# setup the reset pin
+if [ ! -d /sys/class/gpio/gpio24 ]
+then
+    echo "24" > /sys/class/gpio/export
+fi
+# not in reset
+echo 1 > /sys/class/gpio/gpio24/value
 
 # power on the battery simulator
 if [ ! -d /sys/class/gpio/gpio26 ]
@@ -33,3 +40,4 @@ echo 1 > /sys/class/gpio/gpio21/value
 sleep 0.5
 
 # system should now be powered on
+

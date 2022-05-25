@@ -3,8 +3,14 @@
 set timeout 600
 set passing 0
 
+# ASSUME: power is on
 # ASSUME: tty speed set by upstream script
 spawn -open [open /dev/ttyS0 w+]
+# ASSUME: reset is setup
+after 500
+exec echo 0 > /sys/class/gpio/gpio24/value
+after 200
+exec echo 1 > /sys/class/gpio/gpio24/value
 
 expect {
     -re {\_\|TT\|\_PDDB.SKIPMOUNT,.*\_\|TE\|\_} {
@@ -64,11 +70,9 @@ expect {
 	puts "***NOTE: SoC auto-reload failed"
 	puts "This is a known bug and the workaround is 'inserting the paperclip' to reload SoC (see issue #114)"
 	# this is the equivalent of inserting the paperclip
-	exec echo "24" > /sys/class/gpio/export
-	exec echo "out" > /sys/class/gpio/gpio24/direction
-	after 100
+	after 200
 	exec echo 0 > /sys/class/gpio/gpio24/value
-	after 100
+	after 200
 	exec echo 1 > /sys/class/gpio/gpio24/value
 	exp_continue -continue_timer
     }
