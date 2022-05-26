@@ -75,8 +75,8 @@ if { $gotntp == 1 } {
 	    set month [lindex $timestr 3]
 	    set day   [lindex $timestr 4]
 	    set year  [lindex $timestr 5]
-	    set hoursdiff [expr abs([expr $hours - [clock format $systemtime -format %H]])]
-	    set minsdiff [expr abs([expr $mins - [clock format $systemtime -format %M]])]
+	    set hoursdiff [expr abs([expr [ scan $hours %d ] - [ scan [clock format $systemtime -format %H] %d ] ])]
+	    set minsdiff [expr abs([expr [ scan $mins %d ] - [scan [clock format $systemtime -format %M] %d ] ])]
 	    puts "Local time: [clock format $systemtime -format {%H:%M %m/%d/%Y}]"
 	    puts "DUT time: $hours:$mins $month/$day/$year"
 	    puts $hoursdiff
