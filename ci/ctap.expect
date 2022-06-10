@@ -7,30 +7,34 @@ set ctap_passing 0
 # ASSUME: tty speed set by upstream script
 set hidcode [catch {exec ./hid.expect >@stdout} result]
 
-set mon_id 0
+#set mon_id 0
 
 if { $hidcode == 0 } {
     after 5000
-    set timeout 120
+    # the long timeout is because it can actually take a long time to build the testbench itself
+    set timeout 600
     # ASSUME: CTAP2 test tool is installed already. we don't
     # submodule it here because it's too heavy for this repo,
     # which has to fit on the production test jigs.
     spawn bash -c {cd ../../CTAP2-test-tool/ && ./run.sh}
     set testbench $spawn_id
     set ignore_touch 0
-    expect -i $testbench {
+    expect {
 	"Please replug the device, then hit enter." {
-	    if {$mon_id != 0} {
-		close -i $mon_id
-	    }
+	    #if {$mon_id != 0} {
+	    #	puts "closing nomitor"
+	    #	close -i $mon_id
+	    #}
+	    puts "performing a reset"
 	    # this does a reset of the device
 	    set resetcode [catch {exec ./hid.expect >@stdout} result]
 	    if { $resetcode == 1 } {
 	    	exit 1
 	    }
             flush stdout
-	    spawn -open [open /dev/ttyS0 r]
-	    set mon_id $spawn_id
+            #puts "opening nomitor"
+	    #spawn -open [open /dev/ttyS0 r]
+	    #set mon_id $spawn_id
 	    
 	    # then hits enter
 	    after 3000

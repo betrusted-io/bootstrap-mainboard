@@ -13,7 +13,7 @@ exec echo 0 > /sys/class/gpio/gpio24/value
 after 200
 exec echo 1 > /sys/class/gpio/gpio24/value
 
-set timeout 30
+set timeout 40
 expect {
     -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
 	# enter the boot password
@@ -22,7 +22,7 @@ expect {
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
-	after 4000
+	after 6000
 	exec echo -n -e "usb hid\r" > /dev/ttyS0
 	exp_continue -continue_timer
     }
@@ -35,13 +35,24 @@ expect {
 }
 
 if { $gothost == 0 } {
+   set timeout 50
    puts "Retrying USB connection"
-   # give the mount a second try, sometimes it doesn't catch the first time
-   exec echo -n -e "usb debug\r" > /dev/ttyS0
-   after 6000
-   set timeout 20
-   exec echo -n -e "usb hid\r" > /dev/ttyS0
+   after 500
+   exec echo 0 > /sys/class/gpio/gpio24/value
+   after 200
+   exec echo 1 > /sys/class/gpio/gpio24/value
    expect {
+       -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
+	   # enter the boot password
+	   after 500
+	   exec echo -n -e "test\r" > /dev/ttyS0
+	   exp_continue -continue_timer
+       }
+       -re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
+	   after 10000
+	   exec echo -n -e "usb hid\r" > /dev/ttyS0
+	   exp_continue -continue_timer
+       }
        -re {\_\|TT\|\_USB.RESUME,.*\_\|TE\|\_} {
 	   set gothost 1
 	   after 1000
