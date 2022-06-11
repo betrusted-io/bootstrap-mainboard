@@ -8,6 +8,7 @@ set ctap_passing 0
 set hidcode [catch {exec ./hid.expect >@stdout} result]
 
 #set mon_id 0
+set device_reset 0
 
 if { $hidcode == 0 } {
     after 5000
@@ -20,6 +21,11 @@ if { $hidcode == 0 } {
     set testbench $spawn_id
     set ignore_touch 0
     expect {
+	"You have 10 seconds for the next touch after pressing enter." {
+	    puts "Setting device_reset flag to 1"
+	    set device_reset 1
+	    exp_continue
+	}
 	"Please replug the device, then hit enter." {
 	    #if {$mon_id != 0} {
 	    #	puts "closing nomitor"
@@ -38,12 +44,16 @@ if { $hidcode == 0 } {
 	    
 	    # then hits enter
 	    after 3000
-	    puts "Reset finished, hitting enter"
+	    puts "Replug finished, hitting enter"
 	    send -i $testbench \r
-	    after 2500
-	    puts "Confirming reset, per production spec"
-	    puts "Sending 'y'"
-	    exec echo -n -e "y" > /dev/ttyS0
+	    if { $device_reset == 1 } {
+   	        after 5000
+		puts "Confirming device reset, per production spec"
+		puts "Sending 'y'"
+		exec echo -n -e "y" > /dev/ttyS0
+		set device_reset 0
+	    }
+            flush stdout
 	    exp_continue
 	}
 	#"should see a flashing LED on the device, please ignore it." {
