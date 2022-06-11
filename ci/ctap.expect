@@ -31,6 +31,7 @@ if { $hidcode == 0 } {
 	    #	puts "closing nomitor"
 	    #	close -i $mon_id
 	    #}
+	    after 1000
 	    puts "performing a reset"
 	    # this does a reset of the device
 	    set resetcode [catch {exec ./hid.expect >@stdout} result]
