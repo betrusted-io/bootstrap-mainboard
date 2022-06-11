@@ -1,6 +1,5 @@
 #!/usr/bin/expect
 
-set timeout 240
 set passing 0
 set gotip 0
 
@@ -16,45 +15,52 @@ set subnet [lindex $creds 2]
 # ASSUME: tty speed set by upstream script
 spawn -open [open /dev/ttyS0 w+]
 # ASSUME: reset is setup
-after 500
-exec echo 0 > /sys/class/gpio/gpio24/value
-after 200
-exec echo 1 > /sys/class/gpio/gpio24/value
 
-expect {
-    -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
-	# enter the boot password
-	after 500
-	exec echo -n -e "test\r" > /dev/ttyS0
-        exp_continue -continue_timer
-    }
-    -re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
-	after 2000
-	exec echo -n -e "wlan setssid $ssid\r" > /dev/ttyS0
-	after 2000
-	exec echo -n -e "wlan setpass $passwd\r" > /dev/ttyS0
-	after 2000
-	exec echo -n -e "wlan join\r" > /dev/ttyS0
-	exp_continue -continue_timer
-    }
-    -re {\_\|TT\|\_NET.OK,.*\_\|TE\|\_} {
-        set status [split $expect_out(0,string) ","]
-	set ipaddr [lindex $status 1]
-	puts $ipaddr
-	set ipoctets [split $ipaddr .]
-	puts $ipoctets
-	puts $subnet
-	if {[lindex $ipoctets 0] == 10
-	    && [lindex $ipoctets 1] == 0
-	    && [lindex $ipoctets 2] == $subnet} {
-	    puts "Got IP address"
-	    set gotip 1
-	} else {
-	    puts "IP address mismatch"
+set iters 0
+
+while { $iters < 3 && $gotip == 0 } {
+    set timeout 120
+    after 500
+    exec echo 0 > /sys/class/gpio/gpio24/value
+    after 200
+    exec echo 1 > /sys/class/gpio/gpio24/value
+    expect {
+	-re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
+	    # enter the boot password
+	    after 500
+	    exec echo -n -e "test\r" > /dev/ttyS0
 	    exp_continue -continue_timer
+	}
+	-re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
+	    after 8000
+	    exec echo -n -e "wlan setssid $ssid\r" > /dev/ttyS0
+	    after 4000
+	    exec echo -n -e "wlan setpass $passwd\r" > /dev/ttyS0
+	    after 4000
+	    exec echo -n -e "wlan join\r" > /dev/ttyS0
+	    set iters [expr $iters + 1]
+	    exp_continue -continue_timer
+	}
+	-re {\_\|TT\|\_NET.OK,.*\_\|TE\|\_} {
+	    set status [split $expect_out(0,string) ","]
+	    set ipaddr [lindex $status 1]
+	    puts $ipaddr
+	    set ipoctets [split $ipaddr .]
+	    puts $ipoctets
+	    puts $subnet
+	    if {[lindex $ipoctets 0] == 10
+		&& [lindex $ipoctets 1] == 0
+		&& [lindex $ipoctets 2] == $subnet} {
+		puts "Got IP address"
+		set gotip 1
+	    } else {
+		puts "IP address mismatch"
+		exp_continue -continue_timer
+	    }
 	}
     }
 }
+
 if { $gotip == 1 } {
     after 1000
     exec echo -n -e "wlan save\r" > /dev/ttyS0
