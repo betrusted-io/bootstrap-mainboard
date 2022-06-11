@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 echo "THIS SCRIPT ASSUMES YOU KNOW WHAT YOU ARE DOING."
 
@@ -8,7 +9,7 @@ sleep 0.5
 sudo ../betrusted-scripts/vbus.sh 1
 
 # this pre-supposes the device was functional, so we can run this erase script
-sleep 5
+sleep 10
 echo "erasing PDDB - assuming device was previously tested/functional"
 ../betrusted-scripts/usb_update.py --erase-pddb
 sleep 1
