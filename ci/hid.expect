@@ -55,7 +55,7 @@ if { $gothost == 0 } {
        }
        -re {\_\|TT\|\_USB.RESUME,.*\_\|TE\|\_} {
 	   set gothost 1
-	   after 1000
+	   after 3000
 	   flush stdout
 	   close
        }
