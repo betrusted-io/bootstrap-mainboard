@@ -1,0 +1,103 @@
+#!/usr/bin/expect
+
+set hidcode 1
+set ctap_passing 0
+
+# ASSUME: power is on
+# ASSUME: tty speed set by upstream script
+set hidcode [catch {exec ./hid.expect >@stdout} result]
+
+set device_reset 0
+set logger 0
+
+if { $hidcode == 0 } {
+    after 5000
+    # the long timeout is because it can actually take a long time to build the testbench itself
+    set timeout 600
+    # ASSUME: CTAP2 test tool is installed already. we don't
+    # submodule it here because it's too heavy for this repo,
+    # which has to fit on the production test jigs.
+    spawn bash -c {cd ../../CTAP2-test-tool/ && ./run.sh}
+    set testbench $spawn_id
+    spawn -open [open /dev/ttyS0 r]
+    set logger $spawn_id
+
+    set ignore_touch 0
+    expect {
+	-i $logger "dummy string that should never happen but we want to see the output" {
+	    exp_continue
+	}
+	-i $testbench "You have 10 seconds for the next touch after pressing enter." {
+	    puts "Setting device_reset flag to 1"
+	    set device_reset 1
+	    exp_continue
+	}
+	-i $testbench "Please replug the device, then hit enter." {
+	    if {$logger != 0} {
+	    	puts "closing logger"
+	    	close -i $logger
+	    }
+	    puts "performing a reset"
+	    # this does a reset of the device
+	    set resetcode [catch {exec ./hid.expect >@stdout} result]
+	    if { $resetcode == 1 } {
+	    	exit 1
+	    }
+            flush stdout
+	    
+            puts "opening logger"
+	    spawn -open [open /dev/ttyS0 r]
+	    set logger $spawn_id
+	    
+	    # then hits enter
+	    after 3000
+	    puts "Replug finished, hitting enter"
+	    send -i $testbench \r
+	    if { $device_reset == 1 } {
+   	        after 5000
+		puts "Confirming device reset, per production spec"
+		puts "Sending 'y'"
+		exec echo -n -e "y" > /dev/ttyS0
+		set device_reset 0
+	    }
+            flush stdout
+	    exp_continue
+	}
+	#"should see a flashing LED on the device, please ignore it." {
+	#    set ignore_touch 1
+	#    exp_continue -continue_timer
+	#}
+	-i $testbench "Please touch your security key!" {
+	    if { $ignore_touch == 0 } {
+		after 1100
+		puts "Sending 'y'"
+		exec echo -n -e "y" > /dev/ttyS0
+		exp_continue
+	    } else {
+		puts "Ignoring prompt, resetting ignore flag"
+		set ignore_touch 0
+		exp_continue
+	    }
+	}
+	-i $testbench "RESULTS" {
+	    set ctap_passing 1
+	    exp_continue
+	} eof {
+	    if { $ctap_passing == 1 } {
+		puts "Ctap test could run"
+		exit 0
+	    } else {
+		puts "Ctap test failed to run"
+		exit 1
+	    }
+	}
+    }
+}
+
+if { $ctap_passing == 1 } {
+    puts "Ctap test could run"
+    exit 0
+} else {
+    puts "Ctap test failed to run"
+    exit 1
+}
