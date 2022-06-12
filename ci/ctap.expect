@@ -31,6 +31,12 @@ if { $hidcode == 0 } {
 	    #	puts "closing nomitor"
 	    #	close -i $mon_id
 	    #}
+	    
+	    # a full power down seems to make the Pi stack much happier
+	    # over many plug/unplug events
+	    exec ./shutdown.sh
+	    after 4000
+	    exec ./setup.sh
 	    after 1000
 	    puts "performing a reset"
 	    # this does a reset of the device
