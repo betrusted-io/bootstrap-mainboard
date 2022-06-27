@@ -61,11 +61,13 @@ expect {
     }
     -i $testbench "Please replug the device, then hit enter." {
 	puts "performing a reset"
-	set timeout 50
+	set timeout 60
 	# this does a reset of the device
 	
         # a full power down seems to make the Pi stack much happier
         # over many plug/unplug events
+	# give some time before the shutdown to let any pending writes finish
+	after 5000
         exec ./shutdown.sh
         after 4000
         exec ./setup.sh
