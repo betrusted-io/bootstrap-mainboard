@@ -10,6 +10,7 @@ from datetime import datetime
 import pexpect
 from pexpect.fdpexpect import fdspawn
 import serial
+import subprocess
 
 class Test(BaseTest):
     def __init__(self):
@@ -142,18 +143,18 @@ class Test(BaseTest):
             self.logfile.write("VBUS: {:.3f}V\n".format(vbus))
             self.logfile.write("IBAT: {:.3f}mA\n".format(ibat_avg * 1000))
 
-        time.sleep(1.0)
-
         # reset the "don't ask again" toggle for root key init.
+        # /home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py --image precursors/ff_sector.bin 0x27F000
+        time.sleep(1.0)
         if False == self.run_usb(oled,
-               ['/home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py', '--erase',
-                '-a', '0x27F000', '--erase-len=0x1000'],
-               reason="Erase do not ask flag failure", timeout=20, title='Reset do not ask flag:'):
-            self.logfile.write("Failure resetting the don't ask again flag for root key init")
-            self.passing = False        
+               ['/home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py', '--image',
+                'precursors/ff_sector.bin', '0x27F000'],
+                 reason="Reset don't ask reset failure", timeout=90, title="Resetting don't ask flag: "):
+            self.logfile.write("Don't ask flag reset failed")
+            self.passing = False
 
         time.sleep(1.0)
-        
+
         GPIO.output(GPIO_BSIM, 0)
         GPIO.output(GPIO_VBUS, 0) # should already be off, doesn't hurt to check
 
