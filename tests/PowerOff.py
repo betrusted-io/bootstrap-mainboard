@@ -28,6 +28,45 @@ class Test(BaseTest):
             self.passing = False
             self.add_reason(cmd.strip())
         
+    def run_usb(self, oled, cmdline, reason, showerror=True, timeout=60, title=None):
+        passing = True
+        with canvas(oled) as draw:
+            draw.text((0, 0), "Burning {}".format(title), fill="white")
+        start_time = time.time()
+        proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, bufsize = 0, env=self.environment, shell=False)
+        while proc.poll() is None:
+            line = proc.stdout.readline()
+            #print(line)
+            if self.logfile and "Elapsed" not in line:
+                self.logfile.write(line)
+            with canvas(oled) as draw:
+                if title:
+                    draw.text((0, 0), title, fill="white")
+                draw.text((0, FONT_HEIGHT), line[29:], fill="white") # skip redundant chars
+            if time.time() - start_time > timeout:
+                passing = False
+                proc.kill()
+                self.reasons.append("[Timeout] " + reason)
+                if showerror:
+                   with canvas(oled) as draw:
+                      draw.text((0, FONT_HEIGHT*0), reason, fill="white")
+                      draw.text((0, FONT_HEIGHT*1), "Operation timeout!", fill="white")
+                      draw.text((0, FONT_HEIGHT*4), "Press start to continue...", fill="white")
+                   self.wait_start()
+                return passing
+        if proc.poll() != 0:
+            if showerror:
+               with canvas(oled) as draw:
+                  draw.text((0, FONT_HEIGHT*0), reason, fill="white")
+                  draw.text((0, FONT_HEIGHT*1), "Did not complete!", fill="white")
+                  draw.text((0, FONT_HEIGHT*4), "Press start to continue...", fill="white")
+               self.wait_start()
+            passing = False
+            proc.kill()
+            self.reasons.append(reason)
+            return passing
+        return passing
+        
     def run(self, oled):
         self.passing = True
 
@@ -102,6 +141,16 @@ class Test(BaseTest):
             self.logfile.write("Post-test current measured at {}\n".format(str(datetime.now())))
             self.logfile.write("VBUS: {:.3f}V\n".format(vbus))
             self.logfile.write("IBAT: {:.3f}mA\n".format(ibat_avg * 1000))
+
+        time.sleep(1.0)
+
+        # reset the "don't ask again" toggle for root key init.
+        if False == self.run_usb(oled,
+               ['/home/pi/code/bootstrap-mainboard/betrusted-scripts/usb_update.py', '--erase',
+                '-a', '0x27F000', '--erase-len=0x1000'],
+               reason="Erase do not ask flag failure", timeout=20, title='Reset do not ask flag:'):
+            self.logfile.write("Failure resetting the don't ask again flag for root key init")
+            self.passing = False        
 
         time.sleep(1.0)
         
