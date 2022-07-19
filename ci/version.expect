@@ -2,7 +2,7 @@
 
 set expected_maj 0
 set expected_min 9
-set expected_rev 8
+set expected_rev 9
 
 set timeout 45
 
