@@ -1,0 +1,146 @@
+#!/usr/bin/expect
+
+set hidcode 1
+set ctap_passing 0
+set gothost 0
+
+# ASSUME: power is on
+# ASSUME: tty speed set by upstream script
+spawn -open [open /dev/ttyS0 w+]
+set logger $spawn_id
+# ASSUME: reset is setup
+after 500
+exec echo 0 > /sys/class/gpio/gpio24/value
+after 200
+exec echo 1 > /sys/class/gpio/gpio24/value
+set timeout 40
+expect {
+    -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
+	# enter the boot password
+	after 500
+	exec echo -n -e "test\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
+	after 6000
+	exec echo -n -e "usb hid\r" > /dev/ttyS0
+	exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_USB.RESUME,.*\_\|TE\|\_} {
+	set gothost 1
+	after 1000
+    }
+}
+if { $gothost == 1 } {
+    puts "Successfully reset and reconnected"
+    flush stdout
+} else {
+    puts "Failed to reset and reconnect"
+    flush stdout
+    exit 1
+}
+
+set device_reset 0
+
+after 5000
+# the long timeout is because it can actually take a long time to build the testbench itself
+set timeout 600
+# ASSUME: CTAP2 test tool is installed already. we don't
+# submodule it here because it's too heavy for this repo,
+# which has to fit on the production test jigs.
+spawn bash -c {cd ../../CTAP2-test-tool/ && ./run.sh}
+set testbench $spawn_id
+
+set ignore_touch 0
+expect {
+    ###### automation with the testbench driver
+    -i $testbench "You have 10 seconds for the next touch after pressing enter." {
+	puts "Setting device_reset flag to 1"
+	set device_reset 1
+	exp_continue
+    }
+    -i $testbench "Please replug the device, then hit enter." {
+	puts "performing a reset"
+	set timeout 60
+	# this does a reset of the device
+	
+        # a full power down seems to make the Pi stack much happier
+        # over many plug/unplug events
+	# give some time before the shutdown to let any pending writes finish
+	after 5000
+        exec ./shutdown.sh
+        after 4000
+        exec ./setup.sh
+
+	exp_continue
+    }
+    #"should see a flashing LED on the device, please ignore it." {
+    #    set ignore_touch 1
+    #    exp_continue -continue_timer
+    #}
+    -i $testbench "Please touch your security key!" {
+	if { $ignore_touch == 0 } {
+	    after 1100
+	    puts "Sending 'y'"
+	    exec echo -n -e "y" > /dev/ttyS0
+	    exp_continue
+	} else {
+	    puts "Ignoring prompt, resetting ignore flag"
+	    set ignore_touch 0
+	    exp_continue
+	}
+    }
+    -i $testbench "RESULTS" {
+	set ctap_passing 1
+	exp_continue
+    }
+    -i $testbench eof {
+	if { $ctap_passing == 1 } {
+	    puts "Ctap test could run"
+	    exit 0
+	} else {
+	    puts "Ctap test failed to run"
+	    exit 1
+	}
+    }
+
+    ###### automation with the DUT
+    -i $logger -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
+	# enter the boot password
+	after 500
+	exec echo -n -e "test\r" > /dev/ttyS0
+	exp_continue -continue_timer
+    }
+    -i $logger -re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
+	after 6000
+	exec echo -n -e "usb hid\r" > /dev/ttyS0
+	exp_continue -continue_timer
+    }
+    -i $logger -re {\_\|TT\|\_USB.RESUME,.*\_\|TE\|\_} {
+	set gothost 1
+	after 1000
+
+	# then hit enter on the CTAP test bench
+	after 3000
+	puts "Replug finished, hitting enter"
+	send -i $testbench \r
+	if { $device_reset == 1 } {
+	    after 5000
+	    puts "Confirming device reset, per production spec"
+	    puts "Sending 'y'"
+	    exec echo -n -e "y" > /dev/ttyS0
+	    set device_reset 0
+	}
+	flush stdout
+	set timeout 600
+	exp_continue
+    }
+}
+
+if { $ctap_passing == 1 } {
+    puts "Ctap test could run"
+    exit 0
+} else {
+    puts "Ctap test failed to run"
+    exit 1
+}

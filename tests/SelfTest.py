@@ -83,8 +83,28 @@ class Test(BaseTest):
         GPIO.output(GPIO_VBUS, 0) # self-test is done on 'battery power' to control i-measurements
 
         with canvas(oled) as draw:
-            draw.text((0, 0), "Running self test...", fill="white")
+             draw.text((0, 0), "Running self test...", fill="white")
 
+        # catch the init question
+        try:
+            self.console.expect("ROOTKEY.INITQ3", 30);
+        except Exception as e:
+            self.passing = False
+            self.add_reason("OS did not boot in time")
+            return self.passing
+
+        # pointer starts on yes
+        time.sleep(0.5)
+        self.console.send("\x1b[B"); # pointer on no
+        time.sleep(0.4)
+        self.console.send("\x1b[B"); # pointer on "don't ask again"
+        time.sleep(0.4)
+        self.console.send("\x1b[1~"); # select don't ask again -- this will make the rest of CI work correctly. I hope.
+        time.sleep(0.4)
+        self.console.send("\x1b[B"); # pointer on ok
+        time.sleep(0.4)
+        self.console.send("\x1b[1~"); # select
+        
         # wait for boot to finish
         try:
             self.console.expect_exact("|status: starting main loop", 30)
@@ -301,7 +321,8 @@ class Test(BaseTest):
             ibus_nochg += read_i_vbus()
         ibus_nochg /= 10.0
 
-        self.logfile.write("charge current: {:.4f}A\n".format(ibus_chg - ibus_nochg))
+        if self.logfile:
+            self.logfile.write("charge current: {:.4f}A\n".format(ibus_chg - ibus_nochg))
         if ibus_chg - ibus_nochg < 0.20:
             self.passing = False
             self.add_reason("Charger I-fail / U16P BQ25618")

@@ -17,6 +17,7 @@ import luma.oled.device
 import hashlib
 from pathlib import Path
 import uuid
+import sys
 
 from gpiodefs import *
 from adc128 import *
@@ -64,7 +65,7 @@ def get_tests():
     else:
        #tests.append(SocFirmware.Test())
        tests.append(SelfTest.Test())
-       #tests.append(AudioTest.Test())
+       #tests.append(AudioBurn.Test())
        #tests.append(Kill.Test())
     
     tests.append(PowerOff.Test())
@@ -581,18 +582,27 @@ def main():
 
     parser = argparse.ArgumentParser(description="Precursor Factory Test")
     parser.add_argument(
-        "-l", "--log", help="When present, suppress log output to /home/pi/log/", default=True, action="store_false"
+         "-l", "--log", help="When present, suppress log output to /home/pi/log/", default=True, action="store_false"
+    )
+    parser.add_argument(
+         "--stdout", help="Use stdout instead of standard log file", default=False, action="store_true"
+    )
+    parser.add_argument(
+         "--ci", help="Immediately run the test in CI mode", default=False, action="store_true"
     )
     args = parser.parse_args()
 
-    if args.log:
-        try:
-             logfile = open('/home/pi/log/{}_{:%Y%b%d_%H-%M-%S}.log'.format(hex(uuid.getnode()), datetime.now()), 'w')
-        except:
-             logfile = None # don't crash if the fs is full, the show must go on!
+    if args.stdout:
+       logfile = sys.stdout
     else:
-        logfile = None
-    
+       if args.log:
+           try:
+                logfile = open('/home/pi/log/{}_{:%Y%b%d_%H-%M-%S}.log'.format(hex(uuid.getnode()), datetime.now()), 'w')
+           except:
+                logfile = None # don't crash if the fs is full, the show must go on!
+       else:
+           logfile = None
+
     GPIO.setmode(GPIO.BCM)
     
     GPIO.setup(GPIO_START, GPIO.IN)
@@ -639,11 +649,16 @@ def main():
                        draw.text((0, FONT_HEIGHT * 2), ">>>>> Press START to run test <<<<<", fill="white")
                        draw.text((0, FONT_HEIGHT * 3), "{}".format(str(datetime.now())), fill="white")
                        ipaddr = get_ip_address(b'eth0')
+                       if ipaddr == None:
+                            ipaddr = get_ip_address(b'usb0')
                        if ipaddr != None:
                            draw.text((0, FONT_HEIGHT * 4), "LAN IP address: {}".format(ipaddr), fill="white")
                        else:
                            draw.text((0, FONT_HEIGHT * 4), "*** ERROR: Check LAN cable or Internet! ***")
                time.sleep(0.2)
+               if args.ci:
+                    IN_PROGRESS=True
+                    break;
            else:
                 do_menu()
 
@@ -658,6 +673,9 @@ def main():
            logfile.flush()
        
        run_tests(tests, logfile=logfile)
+
+       if args.ci:
+            exit(0)
 
 def cleanup():
     reset_tester_outputs()

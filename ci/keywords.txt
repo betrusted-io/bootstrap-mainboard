@@ -1,0 +1,36 @@
+ROOTKEY.CONFIRM	confirm root key initialization process
+ROOTKEY.GWUP    prompt to check gateware update details
+ROOTKEY.BOOTPW  prompt for boot password
+ROOTKEY.UPDPW   prompt for update password
+ROOTKEY.INITDONE finished with initializing keys
+
+PDDB.BADPW 	bad pddb password
+PDDB.MOUNTED	PDDB mounted successful
+PDDB.SKIPMOUNT	PDDD mount bypassed because no rootkeys
+PDDB.REQFMT	PDDB format request
+PDDB.CHECKPASS  check password notification
+PDDB.PWFAIL     password check failed
+
+VER.EC maj min rev commit	EC version
+VER.XOUS string	   		xous version
+VER.SOC maj min rev extra	soc version
+
+WLAN.STATUS ipaddress  ipaddress in '10.0.1.2' format
+
+NET.PONG  ipaddress seq ms   Net ping results
+NET.TCPGET str	    	     tcpget result as free-form string
+NET.SERVER      	     confirmation of server start
+NET.OK ipaddress	     ipaddress was acquired OK
+
+RTC.LOCAL hh mm MM DD YY     RTC local time in hours, minutes, month, day, year
+RTC.FAIL     	      	     query failed
+RTC.TZ                       prompt for timezone entry
+RTC.NTP                      yes/no prompt for NTP use
+RTC.NTPFAIL                  ntp setting failed
+RTC.NTPOK                    ntp setting succeeded
+
+
+echo -n -e $'\e'\[1~ > /dev/ttyS0  # home
+echo -n -e $'\e'\[B > /dev/ttyS0   # arrow down
+echo -n -e $'\e'\[A > /dev/ttyS0   # arrow up
+
