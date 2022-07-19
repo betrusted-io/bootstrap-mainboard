@@ -67,7 +67,7 @@ expect {
 	puts $xousrevs
 	set xousrevstr [string trim $xousrevs "v"]
 	puts $xousrevstr
-	set xousrevcomp [split $xousrevstr, .-]
+	set xousrevcomp [split $xousrevstr, .-\,]
 	puts $xousrevcomp
 	set xousrev_maj [lindex $xousrevcomp 0]
 	set xousrev_min [lindex $xousrevcomp 1]
@@ -78,6 +78,19 @@ expect {
 puts "ecrev detected: $ecrev_maj.$ecrev_min.$ecrev_rev+$ecrev_ext"
 puts "socrev detected: $socrev_maj.$socrev_min.$socrev_rev+$socrev_ext"
 puts "xousrev detected: $xousrevstr -> $xousrev_maj.$xousrev_min.$xousrev_rev"
+
+#puts "$ecrev_maj"
+#puts "$ecrev_min"
+#puts "$ecrev_rev"
+#puts "$socrev_maj"
+#puts "$socrev_min"
+#puts "$socrev_rev"
+#puts "$xousrev_maj"
+#puts "$xousrev_min"
+#puts "$xousrev_rev"
+#puts "$expected_maj"
+#puts "$expected_min"
+#puts "$expected_rev"
 
 if { $ecrev_maj == $expected_maj
      && $ecrev_min == $expected_min
