@@ -84,8 +84,13 @@ set timeout 700
 # we don't check it into VCS because it would be out of sync with the
 # actual version that's in the xous kernel tools directory. instead,
 # an scp operation is used by jenkins to stage it from the latest version.
-exec ./backup.py --output /mnt/ramdisk/backup.pddb
+try {
+    set results [exec ./backup.py --output /mnt/ramdisk/backup.pddb]
+    set status 0
+} trap CHILDSTATUS {results options} {
+    puts "Backup exited with non-zero status, but that is OK: $results"
+}
 
-echo "Backup script finished"
+puts "Backup script finished"
 
 exit 0
