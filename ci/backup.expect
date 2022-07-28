@@ -24,15 +24,24 @@ expect {
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.REQPW,.*\_\|TE\|\_} {
+	after 1000
 	exec echo -n -e "p@ss\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.CREATEOK,.*\_\|TE\|\_} {
-	exec echo -n -e "pddb write citest:testkey precursor_test_data\r" > /dev/ttyS0
-	# this line got added into the command itself, so no longer necessary
-	# exec echo -n -e "pddb sync\r" > /dev/ttyS0
-	# scroll up to creating a backup, counting on menu wrap-around
 	after 1000
+	exec echo -n -e "pddb basisunlock citest\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_PDDB.UNLOCKOK,.*\_\|TE\|\_} {
+	after 1000
+	exec echo -n -e "pddb write testdict:testkey precursor_test_data\r" > /dev/ttyS0
+	after 500
+	exec echo -n -e "pddb sync\r" > /dev/ttyS0
+	
+	# scroll up to creating a backup, counting on menu wrap-around
+	after 3000
+	puts "Starting backup process"
 	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
         after 500
 	exec bash -c {echo -n -e $'\e'\[A > /dev/ttyS0}
@@ -67,14 +76,16 @@ expect {
     }
 }
 
-# clear the previous backup file
-exec bash -c {rm -f /tmp/backup.pddb}
-
 # takes about 7-8 minutes on the Pi
+exec rm -f /mnt/ramdisk/backup.pddb
+
+set timeout 700
 # this script needs to be placed in this directory by the CI system
 # we don't check it into VCS because it would be out of sync with the
 # actual version that's in the xous kernel tools directory. instead,
 # an scp operation is used by jenkins to stage it from the latest version.
-exec bash -c {./backup.py --output /tmp/backup.pddb}
+exec ./backup.py --output /mnt/ramdisk/backup.pddb
+
+echo "Backup script finished"
 
 exit 0
