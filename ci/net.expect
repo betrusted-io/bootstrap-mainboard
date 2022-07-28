@@ -96,6 +96,10 @@ if { $gotntp == 1 } {
 		puts "NTP Failed"
 		set ntppassing 0
 	    }
+	    # exercise the PDDB flush path once in the middle of the test. It's stuck
+	    # here because we'll have created some records, but we also plan to create more.
+	    # there's no delay after the command, because, it's supposed to be fully concurrent and fast.
+	    exec echo -n -e "pddb flush\r" > /dev/ttyS0
 	}
     }
 }
