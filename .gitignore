@@ -133,3 +133,5 @@ dmypy.json
 
 # credentials for testing
 ci/credentials.txt
+# backup script should be the most recent from the xous-kernel repo and not checked in here
+ci/backup.py
