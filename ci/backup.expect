@@ -19,28 +19,8 @@ expect {
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
-	after 1000
-	exec echo -n -e "pddb basiscreate citest\r" > /dev/ttyS0
-        exp_continue -continue_timer
-    }
-    -re {\_\|TT\|\_PDDB.REQPW,.*\_\|TE\|\_} {
-	after 1000
-	exec echo -n -e "p@ss\r" > /dev/ttyS0
-        exp_continue -continue_timer
-    }
-    -re {\_\|TT\|\_PDDB.CREATEOK,.*\_\|TE\|\_} {
-	after 1000
-	exec echo -n -e "pddb basisunlock citest\r" > /dev/ttyS0
-        exp_continue -continue_timer
-    }
-    -re {\_\|TT\|\_PDDB.UNLOCKOK,.*\_\|TE\|\_} {
-	after 1000
-	exec echo -n -e "pddb write testdict:testkey precursor_test_data\r" > /dev/ttyS0
-	after 500
-	exec echo -n -e "pddb sync\r" > /dev/ttyS0
-	
-	# scroll up to creating a backup, counting on menu wrap-around
-	after 3000
+	# scroll up to select creating a backup, counting on menu wrap-around
+	after 8000
 	puts "Starting backup process"
 	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
         after 500
@@ -56,14 +36,14 @@ expect {
     -re {\_\|TT\|\_ROOTKEY.UPDPW,.*\_\|TE\|\_} {
 	exec echo -n -e "4 <ng>r_P@sw0rd\r" > /dev/ttyS0
 	# ample time for the backup to prep
-	after 8000
+	after 9000
 	# space bar to dismiss the bip-39 display
 	exec echo -n -e " " > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_ROOTKEY.CONFIRM,.*\_\|TE\|\_} {
-	# dismiss the check bip-39 routine
-	after 1500
+	# dismiss the check bip-39 routine by selecting "no"
+	after 2000
 	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
         after 300
 	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
@@ -71,7 +51,7 @@ expect {
 	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
         after 300
 	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
-	# 10 seconds for the backup to complete -- should be enough!
+	# 10 seconds for the backup postamble complete -- should be enough!
         after 10000
 	puts "Backup prepared, running backup process..."
     }
