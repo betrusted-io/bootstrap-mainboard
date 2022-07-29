@@ -80,18 +80,19 @@ expect {
 # takes about 7-8 minutes on the Pi
 exec rm -f /mnt/ramdisk/backup.pddb
 
-set timeout 700
+set timeout 1000
 # this script needs to be placed in this directory by the CI system
 # we don't check it into VCS because it would be out of sync with the
 # actual version that's in the xous kernel tools directory. instead,
 # an scp operation is used by jenkins to stage it from the latest version.
-try {
-    set results [exec ./backup.py --output /mnt/ramdisk/backup.pddb]
-    set status 0
-} trap CHILDSTATUS {results options} {
-    puts "Backup exited with non-zero status, but that is OK: $results"
+if {[catch {exec ./backup.py --output /mnt/ramdisk/backup.pddb} errmsg]} {
+    puts "Backup exited with non-zero status but that is expected: $errmsg"
 }
 
+after 1000
+
 puts "Backup script finished"
+
+after 1000
 
 exit 0
