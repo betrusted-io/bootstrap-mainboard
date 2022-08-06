@@ -83,6 +83,15 @@ if { $gotip == 1 } {
     }
 }
 
+set timeout 30
+exec echo -n -e "pddb sync\r" > /dev/ttyS0
+expect {
+    -re {\_\|TT\|\_PDDB.SYNCDONE,.*\_\|TE\|\_} {
+	puts "sync done, shutting down"
+    }
+}
+
+
 if { $passing == 1 } {
     puts "Wlan Passed"
     exit 0
