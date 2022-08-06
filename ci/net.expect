@@ -130,7 +130,13 @@ expect {
 	# the command itself will return NET.TCPGET, but we ignore it
 	puts "got test string from remote server"
 	set netpassing 1
+        exec echo -n -e "pddb sync\r" > /dev/ttyS0
+        exp_continue -continue_timer
     }
+    -re {\_\|TT\|\_PDDB.SYNCDONE,.*\_\|TE\|\_} {
+	puts "sync done, shutting down"
+    }
+
 }
 
 if { $netpassing == 1 && $ntppassing == 1 } {
