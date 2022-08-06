@@ -122,7 +122,7 @@ expect {
     }
 }
 after 1000
-set timeout 20
+set timeout 30
 exec echo -n -e "net tcpget bunniefoo.com/bunnie/ci.txt\r" > /dev/ttyS0
 expect {
     -re {\_\|TT\|\_FETCHOK,.*\_\|TE\|\_} {
