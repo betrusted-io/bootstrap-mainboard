@@ -2,7 +2,10 @@
 
 set expected_maj 0
 set expected_min 9
-set expected_rev 10
+
+set expected_soc_rev 10
+set expected_xous_rev 10
+set expected_ec_rev 9
 
 set timeout 45
 
@@ -94,13 +97,13 @@ puts "xousrev detected: $xousrevstr -> $xousrev_maj.$xousrev_min.$xousrev_rev"
 
 if { $ecrev_maj == $expected_maj
      && $ecrev_min == $expected_min
-     && $ecrev_rev == $expected_rev
+     && $ecrev_rev == $expected_ec_rev
      && $socrev_maj == $expected_maj
      && $socrev_min == $expected_min
-     && $socrev_rev == $expected_rev
+     && $socrev_rev == $expected_soc_rev
      && $xousrev_maj == $expected_maj
      && $xousrev_min == $expected_min
-     && $xousrev_rev == $expected_rev } {
+     && $xousrev_rev == $expected_xous_rev } {
     exit 0
 } else {
     exit 1
