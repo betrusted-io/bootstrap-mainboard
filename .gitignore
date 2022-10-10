@@ -133,3 +133,4 @@ dmypy.json
 
 # credentials for testing
 ci/credentials.txt
+ci/backup.py
