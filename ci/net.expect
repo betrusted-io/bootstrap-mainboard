@@ -135,6 +135,8 @@ expect {
     }
     -re {\_\|TT\|\_PDDB.SYNCDONE,.*\_\|TE\|\_} {
 	puts "sync done, shutting down"
+	# add a wait for data to commit to disk
+	after 10000
     }
 
 }
