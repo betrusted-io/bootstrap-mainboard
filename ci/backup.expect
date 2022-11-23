@@ -88,11 +88,11 @@ expect {
     -re {\_\|TT\|\_ROOTKEY.CONFIRM,.*\_\|TE\|\_} {
 		# dismiss the check bip-39 routine by selecting "no"
 		after 2000
-		menu_down
+		menu_down 1
         after 300
 		menu_select
         after 300
-		menu_down
+		menu_down 1
         after 300
 		menu_select
         exp_continue -continue_timer
