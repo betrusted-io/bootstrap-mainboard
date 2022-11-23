@@ -22,11 +22,13 @@ expect {
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_NET.OK,.*\_\|TE\|\_} {
-		# select set time menu entry
+		# select set time menu entry. This may have to change if "Enable audio subsystem" behavior changes
 		after 500
 		menu_select
 		after 300
-		menu_down 7
+		menu_down 3
+		menu_select
+		menu_up 4
 		menu_select
 		after 150
 		exp_continue -continue_timer
@@ -66,7 +68,7 @@ after 8000
 puts "Starting backup process"
 menu_select
 after 500
-menu_up 3
+menu_up 4
 menu_select
 
 expect {
