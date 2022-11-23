@@ -16,51 +16,51 @@ exec echo 1 > /sys/class/gpio/gpio24/value
 
 expect {
     -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
-	# enter the boot password
-	after 500
-	exec echo -n -e "test\r" > /dev/ttyS0
+		# enter the boot password
+		after 500
+		exec echo -n -e "test\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.REQFMT,.*\_\|TE\|\_} {
-	after 500
-	menu_down 2
-	menu_select
-	exp_continue -continue_timer
+		after 500
+		menu_down 2
+		menu_select
+		exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.CHECKPASS,.*\_\|TE\|\_} {
-	after 500
-	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
-	exp_continue -continue_timer
+		after 500
+		exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
+		exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
-	# add a secret basis toward the beginning of the CI sequence
-	# this basis is never mounted or touched by later ops, but it should
-	# also "survive" throughout the duration of the next tests and be
-	# intact in the backalyzer output.
-	after 5000
-	exec echo -n -e "pddb basiscreate citest\r" > /dev/ttyS0
+		# add a secret basis toward the beginning of the CI sequence
+		# this basis is never mounted or touched by later ops, but it should
+		# also "survive" throughout the duration of the next tests and be
+		# intact in the backalyzer output.
+		after 5000
+		exec echo -n -e "pddb basiscreate citest\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.REQPW,.*\_\|TE\|\_} {
-	after 2000
-	exec echo -n -e "p@ss\r" > /dev/ttyS0
+		after 2000
+		exec echo -n -e "p@ss\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.CREATEOK,.*\_\|TE\|\_} {
-	after 2000
-	# this unlocks another REQPW call, but then leads to an UNLOCKOK response
-	exec echo -n -e "pddb basisunlock citest\r" > /dev/ttyS0
+		after 2000
+		# this unlocks another REQPW call, but then leads to an UNLOCKOK response
+		exec echo -n -e "pddb basisunlock citest\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.UNLOCKOK,.*\_\|TE\|\_} {
-	after 2000
-	# create some test data that should "stick around" for a long time
-	exec echo -n -e "pddb write testdict:testkey precursor_test_data\r" > /dev/ttyS0
-	after 1000
-	exec echo -n -e "pddb sync\r" > /dev/ttyS0
-	after 5000
+		after 2000
+		# create some test data that should "stick around" for a long time
+		exec echo -n -e "pddb write testdict:testkey precursor_test_data\r" > /dev/ttyS0
+		after 1000
+		exec echo -n -e "pddb sync\r" > /dev/ttyS0
+		after 5000
 
-	set passing 1
+		set passing 1
     }
 }
 

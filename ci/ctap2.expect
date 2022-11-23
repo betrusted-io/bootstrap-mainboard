@@ -55,19 +55,19 @@ set ignore_touch 0
 expect {
     ###### automation with the testbench driver
     -i $testbench "You have 10 seconds for the next touch after pressing enter." {
-	puts "Setting device_reset flag to 1"
-	set device_reset 1
-	exp_continue
+		puts "Setting device_reset flag to 1"
+		set device_reset 1
+		exp_continue
     }
     -i $testbench "Please replug the device, then hit enter." {
-	puts "performing a reset"
-	set timeout 60
-	# this does a reset of the device
-	
-        # a full power down seems to make the Pi stack much happier
-        # over many plug/unplug events
-	# give some time before the shutdown to let any pending writes finish
-	after 5000
+		puts "performing a reset"
+		set timeout 60
+		# this does a reset of the device
+
+		# a full power down seems to make the Pi stack much happier
+		# over many plug/unplug events
+		# give some time before the shutdown to let any pending writes finish
+		after 5000
         exec ./shutdown.sh
         after 4000
         exec ./setup.sh
@@ -79,61 +79,61 @@ expect {
     #    exp_continue -continue_timer
     #}
     -i $testbench "Please touch your security key!" {
-	if { $ignore_touch == 0 } {
-	    after 1100
-	    puts "Sending 'y'"
-	    exec echo -n -e "y" > /dev/ttyS0
-	    exp_continue
-	} else {
-	    puts "Ignoring prompt, resetting ignore flag"
-	    set ignore_touch 0
-	    exp_continue
-	}
+		if { $ignore_touch == 0 } {
+			after 1100
+			puts "Sending 'y'"
+			exec echo -n -e "y" > /dev/ttyS0
+			exp_continue
+		} else {
+			puts "Ignoring prompt, resetting ignore flag"
+			set ignore_touch 0
+			exp_continue
+		}
     }
     -i $testbench "RESULTS" {
-	set ctap_passing 1
-	exp_continue
+		set ctap_passing 1
+		exp_continue
     }
     -i $testbench eof {
-	if { $ctap_passing == 1 } {
-	    puts "Ctap test could run"
-	    exit 0
-	} else {
-	    puts "Ctap test failed to run"
-	    exit 1
-	}
+		if { $ctap_passing == 1 } {
+			puts "Ctap test could run"
+			exit 0
+		} else {
+			puts "Ctap test failed to run"
+			exit 1
+		}
     }
 
     ###### automation with the DUT
     -i $logger -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
-	# enter the boot password
-	after 500
-	exec echo -n -e "test\r" > /dev/ttyS0
-	exp_continue -continue_timer
+		# enter the boot password
+		after 500
+		exec echo -n -e "test\r" > /dev/ttyS0
+		exp_continue -continue_timer
     }
     -i $logger -re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
-	after 6000
-	exec echo -n -e "usb hid\r" > /dev/ttyS0
-	exp_continue -continue_timer
+		after 6000
+		exec echo -n -e "usb hid\r" > /dev/ttyS0
+		exp_continue -continue_timer
     }
     -i $logger -re {\_\|TT\|\_USB.RESUME,.*\_\|TE\|\_} {
-	set gothost 1
-	after 1000
+		set gothost 1
+		after 1000
 
-	# then hit enter on the CTAP test bench
-	after 3000
-	puts "Replug finished, hitting enter"
-	send -i $testbench \r
-	if { $device_reset == 1 } {
-	    after 5000
-	    puts "Confirming device reset, per production spec"
-	    puts "Sending 'y'"
-	    exec echo -n -e "y" > /dev/ttyS0
-	    set device_reset 0
-	}
-	flush stdout
-	set timeout 600
-	exp_continue
+		# then hit enter on the CTAP test bench
+		after 3000
+		puts "Replug finished, hitting enter"
+		send -i $testbench \r
+		if { $device_reset == 1 } {
+			after 5000
+			puts "Confirming device reset, per production spec"
+			puts "Sending 'y'"
+			exec echo -n -e "y" > /dev/ttyS0
+			set device_reset 0
+		}
+		flush stdout
+		set timeout 600
+		exp_continue
     }
 }
 

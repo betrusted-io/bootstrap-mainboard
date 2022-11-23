@@ -70,16 +70,16 @@ if { $gotip == 1 } {
     exec echo -n -e "net ping google.com 10\r" > /dev/ttyS0
     set pongcount 0
     expect {
-	-re {\_\|TT\|\_NET.PONG,.*\_\|TE\|\_} {
-	    set pong [split $expect_out(0,string) ","]
-	    set pongcount [expr $pongcount + 1]
-	    exp_continue -continue_timer
-	}
+		-re {\_\|TT\|\_NET.PONG,.*\_\|TE\|\_} {
+			set pong [split $expect_out(0,string) ","]
+			set pongcount [expr $pongcount + 1]
+			exp_continue -continue_timer
+		}
     }
     # allow for some dropout, because networks are unreliable: 9 or 10 pongs is passing
     if {$pongcount > 8} {
-	puts "Pongcount: $pongcount"
-	set passing 1
+		puts "Pongcount: $pongcount"
+		set passing 1
     }
 }
 
@@ -87,10 +87,10 @@ set timeout 30
 exec echo -n -e "pddb sync\r" > /dev/ttyS0
 expect {
     -re {\_\|TT\|\_PDDB.SYNCDONE,.*\_\|TE\|\_} {
-	puts "sync done, shutting down"
+		puts "sync done, shutting down"
     }
 }
-
+after 4000
 
 if { $passing == 1 } {
     puts "Wlan Passed"

@@ -58,24 +58,24 @@ expect {
 set timeout 45
 expect {
     "Signature check failed; powering down" {
-	puts "***NOTE: SoC auto-reload failed"
-	puts "This is a known bug and the workaround is 'inserting the paperclip' to reload SoC (see issue #114)"
-	# this is the equivalent of inserting the paperclip
-	after 200
-	exec echo 0 > /sys/class/gpio/gpio24/value
-	after 200
-	exec echo 1 > /sys/class/gpio/gpio24/value
-	exp_continue -continue_timer
+		puts "***NOTE: SoC auto-reload failed"
+		puts "This is a known bug and the workaround is 'inserting the paperclip' to reload SoC (see issue #114)"
+		# this is the equivalent of inserting the paperclip
+		after 200
+		exec echo 0 > /sys/class/gpio/gpio24/value
+		after 200
+		exec echo 1 > /sys/class/gpio/gpio24/value
+		exp_continue -continue_timer
     }
     -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
-	# enter a boot password
-	after 500
-	exec echo -n -e "test\r" > /dev/ttyS0
+		# enter a boot password
+		after 500
+		exec echo -n -e "test\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.REQFMT,.*\_\|TE\|\_} {
-	puts "At PDDB request format"
-	set passing 1
+		puts "At PDDB request format"
+		set passing 1
     }
 }
 

@@ -47,12 +47,12 @@ expect {
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_RTC.NTPFAIL,.*\_\|TE\|\_} {
-	puts "NTP failed"
-	set gotntp 0
+		puts "NTP failed"
+		set gotntp 0
     }
     -re {\_\|TT\|\_RTC.NTPOK,.*\_\|TE\|\_} {
-	puts "NTP succeeded"
-	set gotntp 1
+		puts "NTP succeeded"
+		set gotntp 1
     }
 
 }
@@ -104,16 +104,16 @@ exec echo -n -e "net server\r" > /dev/ttyS0
 expect {
     # catch cases of net server not starting due to stdlib integration errors
     "panic" {
-	set netpassing 0
+		set netpassing 0
     }
     "PANIC" {
-	set netpassing 0
+		set netpassing 0
     }
     "Panic" {
-	set netpassing 0
+		set netpassing 0
     }
     -re {\_\|TT\|\_NET.SERVER,.*\_\|TE\|\_} {
-	puts "server started, moving to next stage"
+		puts "server started, moving to next stage"
     }
 }
 after 1000
@@ -121,17 +121,17 @@ set timeout 30
 exec echo -n -e "net tcpget bunniefoo.com/bunnie/ci.txt\r" > /dev/ttyS0
 expect {
     -re {\_\|TT\|\_FETCHOK,.*\_\|TE\|\_} {
-	# note that FETCHOK comes from the fetched file, not the command itself
-	# the command itself will return NET.TCPGET, but we ignore it
-	puts "got test string from remote server"
-	set netpassing 1
+		# note that FETCHOK comes from the fetched file, not the command itself
+		# the command itself will return NET.TCPGET, but we ignore it
+		puts "got test string from remote server"
+		set netpassing 1
         exec echo -n -e "pddb sync\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.SYNCDONE,.*\_\|TE\|\_} {
-	puts "sync done, shutting down"
-	# add a wait for data to commit to disk
-	after 10000
+		puts "sync done, shutting down"
+		# add a wait for data to commit to disk
+		after 10000
     }
 
 }
