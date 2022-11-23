@@ -1,5 +1,7 @@
 #!/usr/bin/expect
 
+source menu.expect
+
 set timeout 1500
 set passing 0
 
@@ -21,11 +23,8 @@ expect {
     }
     -re {\_\|TT\|\_PDDB.REQFMT,.*\_\|TE\|\_} {
 	after 500
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-        after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-        after 150
-	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
+	menu_down 2
+	menu_select
 	exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.CHECKPASS,.*\_\|TE\|\_} {
@@ -60,7 +59,7 @@ expect {
 	after 1000
 	exec echo -n -e "pddb sync\r" > /dev/ttyS0
 	after 5000
-	
+
 	set passing 1
     }
 }
@@ -70,4 +69,3 @@ if { $passing == 1 } {
 } else {
     exit 1
 }
-    

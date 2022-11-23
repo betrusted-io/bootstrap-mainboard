@@ -1,5 +1,7 @@
 #!/usr/bin/expect
 
+source menu.expect
+
 set timeout 600
 set passing 0
 
@@ -20,20 +22,10 @@ expect {
 	after 500
 
 	# raise home menu, select "init root keys"
-	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
-	after 150
+	menu_select
+	after 300
+	menu_down 5
+	menu_select
 	exp_continue -continue_timer
     }
     -re {\_\|TT\|\_ROOTKEY.CONFIRM,.*\_\|TE\|\_} {
@@ -41,11 +33,8 @@ expect {
 
 	# extra time to allow menu to draw
 	after 500
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-        after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-        after 150
-	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
+	menu_down 2
+	menu_select
 	exp_continue -continue_timer
     }
     -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
@@ -88,11 +77,10 @@ expect {
 	puts "At PDDB request format"
 	set passing 1
     }
-}    
+}
 
 if { $passing == 1 } {
     exit 0
 } else {
     exit 1
 }
-    

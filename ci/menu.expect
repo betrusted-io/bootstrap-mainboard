@@ -1,0 +1,21 @@
+proc menu_down (count) {
+    for { set i 0 } { $i < $count } { incr i } {
+        after 150
+        exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
+    }
+    after 150
+}
+
+proc menu_up (count) {
+    for { set i 0 } { $i < $count } { incr i } {
+        after 150
+        exec bash -c {echo -n -e $'\e'\[A > /dev/ttyS0}
+    }
+    after 150
+}
+
+proc menu_select () {
+    after 150
+    exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
+    after 150
+}
