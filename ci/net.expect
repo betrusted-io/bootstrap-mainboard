@@ -28,7 +28,7 @@ expect {
 		after 500
 		menu_select
 		after 300
-		menu_down 3
+		menu_down 2
 		menu_select
 		menu_up 4
 		menu_select
