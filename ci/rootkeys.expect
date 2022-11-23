@@ -24,7 +24,7 @@ expect {
 		# raise home menu, select "init root keys"
 		menu_select
 		after 300
-		menu_down 5
+		menu_down 3
 		menu_select
 		exp_continue -continue_timer
     }
