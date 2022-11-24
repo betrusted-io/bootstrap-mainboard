@@ -279,6 +279,7 @@ class Test(BaseTest):
         time.sleep(2)
 
         ibat_nom = 0.0
+        time.sleep(12) # wait for the autobacklight timer to time-out
         for i in range(10):
             time.sleep(0.1)
             ibat_nom += read_i_bat(high_range=True)
@@ -351,6 +352,7 @@ class Test(BaseTest):
 
         # baseline the ibat prior to sleep
         ibat_nom = 0.0
+        time.sleep(12)
         for i in range(10):
             time.sleep(0.1)
             ibat_nom += read_i_bat(high_range=True)

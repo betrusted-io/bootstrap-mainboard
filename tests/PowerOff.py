@@ -113,6 +113,7 @@ class Test(BaseTest):
         ibat_min = 0.180
 
         ibat_avg = 0.0
+        time.sleep(12)
         for x in range(10, 0, -1):
             if x == 10 or x == 5 or x == 1:
                 with canvas(oled) as draw:
