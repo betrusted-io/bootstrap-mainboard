@@ -183,6 +183,7 @@ def run_tests(tests, logfile=None):
         test.reset(logfile)     # reset the test state before running it. this also resets the start timer.
     # each test runs, and can draw onto the screen for status updates
     # they return a simple pass/fail result, and if not passing, the full sequence aborts
+    passing = True
     for test in tests:
         test.run(oled)
         with canvas(oled) as draw:
@@ -191,8 +192,19 @@ def run_tests(tests, logfile=None):
         if logfile:
             logfile.flush()
         if test.is_passing() != True:
+            passing = False
             break
     elapsed = time.time() - elapsed_start
+
+    # print out the test failure reasons without user interaction
+    if passing != True:
+        if logfile:
+            logfile.write("Fail reasons given:\n")
+            for test in tests:
+                reasons = test.fail_reasons()
+                for reason in reasons:
+                    logfile.write(reason + "\n")
+                logfile.flush()
 
     # print a summary screen
     maxlines = 4
@@ -234,15 +246,6 @@ def run_tests(tests, logfile=None):
         if logfile:
             logfile.write(note + "\n")
             logfile.flush()
-
-    if passing != True:
-        if logfile:
-            logfile.write("Fail reasons given:\n")
-            for test in tests:
-                reasons = test.fail_reasons()
-                for reason in reasons:
-                    logfile.write(reason + "\n")
-                logfile.flush()
 
     wait_start()
     
