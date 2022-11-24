@@ -180,7 +180,7 @@ class Test(BaseTest):
                     if stats[11] != 44: # id code
                         self.passing = False
                         self.add_reason("U16P BQ25618 fail")
-                    if stats[12] < 3680 or stats[12] > 3740: # battery voltage, according to the gas gauge
+                    if stats[12] < 3600 or stats[12] > 3740: # battery voltage, according to the gas gauge
                         # battery voltage "brackets high" because we should be charging
                         self.passing = False
                         self.add_reason("U11P BQ27421 fail")
