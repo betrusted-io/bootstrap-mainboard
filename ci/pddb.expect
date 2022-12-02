@@ -37,7 +37,7 @@ expect {
 		# this basis is never mounted or touched by later ops, but it should
 		# also "survive" throughout the duration of the next tests and be
 		# intact in the backalyzer output.
-		after 5000
+		after 7000
 		exec echo -n -e "pddb basiscreate citest\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
@@ -47,7 +47,7 @@ expect {
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.CREATEOK,.*\_\|TE\|\_} {
-		after 2000
+		after 3000
 		# this unlocks another REQPW call, but then leads to an UNLOCKOK response
 		exec echo -n -e "pddb basisunlock citest\r" > /dev/ttyS0
         exp_continue -continue_timer
