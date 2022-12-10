@@ -112,14 +112,15 @@ class Test(BaseTest):
         with canvas(oled) as draw:
             draw.text((0, 0), "Selftest / Boost...", fill="white")
         vbus = read_vbus()
-        #print("vbus before: {}", vbus)
+        print("vbus before boost msmnt: {}", vbus)
         if vbus > 1.0:
             self.passing = False
             self.add_reason("VBUS leakage (boost mode Q14P)")
             
         self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
-        time.sleep(1.0)
+        time.sleep(3.0)
         vbus = read_vbus()
+        print("vbus with boost on: {}", vbus)
 
         if vbus < 4.5:
             self.passing = False
