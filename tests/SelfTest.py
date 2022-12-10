@@ -39,7 +39,7 @@ class Test(BaseTest):
         
     def run(self, oled):
         global VIBE_HAPPENED
-        BOOT_WAIT_SECS = 3.0  # time to wait for a boot to finish before issuing commands
+        BOOT_WAIT_SECS = 9.0  # time to wait for a boot to finish before issuing commands
         
         self.passing = True
         self.has_run = True
@@ -118,7 +118,7 @@ class Test(BaseTest):
             self.add_reason("VBUS leakage (boost mode Q14P)")
             
         self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
-        time.sleep(1.5)
+        time.sleep(1.0)
         vbus = read_vbus()
 
         if vbus < 4.5:
