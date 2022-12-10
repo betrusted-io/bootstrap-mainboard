@@ -118,7 +118,7 @@ class Test(BaseTest):
             self.add_reason("VBUS leakage (boost mode Q14P)")
             
         self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
-        time.sleep(1)
+        time.sleep(1.5)
         vbus = read_vbus()
 
         if vbus < 4.5:
