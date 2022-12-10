@@ -39,7 +39,7 @@ class Test(BaseTest):
         
     def run(self, oled):
         global VIBE_HAPPENED
-        BOOT_WAIT_SECS = 9.0  # time to wait for a boot to happen before issuing commands
+        BOOT_WAIT_SECS = 3.0  # time to wait for a boot to finish before issuing commands
         
         self.passing = True
         self.has_run = True
@@ -86,6 +86,7 @@ class Test(BaseTest):
              draw.text((0, 0), "Running self test...", fill="white")
 
         # catch the init question
+        # this is gated on the status pump running, so it also marks the completion of boot.
         try:
             self.console.expect("ROOTKEY.INITQ3", 30);
         except Exception as e:
@@ -105,14 +106,6 @@ class Test(BaseTest):
         time.sleep(0.4)
         self.console.send("\x1b[1~"); # select
         
-        # wait for boot to finish
-        try:
-            self.console.expect_exact("|status: starting main loop", 30)
-        except Exception as e:
-            self.passing = False
-            self.add_reason("OS did not boot in time")
-            return self.passing
-
         time.sleep(BOOT_WAIT_SECS) # give a little time for init scripts to finish running
 
         #### at this moment, VBUS is off. test boost mode.
