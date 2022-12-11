@@ -86,8 +86,7 @@ class Test(BaseTest):
              draw.text((0, 0), "Running self test...", fill="white")
 
         # catch the init question
-        # this is gated on the status pump running, so it also marks the completion of boot.
-        try:
+         try:
             self.console.expect("ROOTKEY.INITQ3", 30);
         except Exception as e:
             self.passing = False
@@ -105,14 +104,22 @@ class Test(BaseTest):
         self.console.send("\x1b[B"); # pointer on ok
         time.sleep(0.4)
         self.console.send("\x1b[1~"); # select
-        
+
+        # wait for boot to finish
+        try:
+            self.console.expect_exact("|status: starting main loop", 30)
+        except Exception as e:
+            self.passing = False
+            self.add_reason("OS did not boot in time")
+            return self.passing
+
         time.sleep(BOOT_WAIT_SECS) # give a little time for init scripts to finish running
 
         #### at this moment, VBUS is off. test boost mode.
         with canvas(oled) as draw:
             draw.text((0, 0), "Selftest / Boost...", fill="white")
         vbus = read_vbus()
-        print("vbus before boost msmnt: {}", vbus)
+        print("vbus before boost msmnt: {}".format(vbus))
         if vbus > 1.0:
             self.passing = False
             self.add_reason("VBUS leakage (boost mode Q14P)")
@@ -120,7 +127,7 @@ class Test(BaseTest):
         self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
         time.sleep(3.0)
         vbus = read_vbus()
-        print("vbus with boost on: {}", vbus)
+        print("vbus with boost on: {}".format(vbus))
 
         if vbus < 4.5:
             self.passing = False
