@@ -86,7 +86,7 @@ class Test(BaseTest):
              draw.text((0, 0), "Running self test...", fill="white")
 
         # catch the init question
-         try:
+        try:
             self.console.expect("ROOTKEY.INITQ3", 30);
         except Exception as e:
             self.passing = False
