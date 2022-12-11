@@ -123,11 +123,21 @@ class Test(BaseTest):
         if vbus > 1.0:
             self.passing = False
             self.add_reason("VBUS leakage (boost mode Q14P)")
-            
+
+        # unclear why the first command is not issuing. I think this is not a hardware problem,
+        # as it was working just fine for a couple of years. My guess is power on init got busy
+        # enough that the COM bus may be too busy to accept the command immediately on boot.
+        # Issue the command twice as a work-around so the factory test can proceed.
         self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
-        time.sleep(3.0)
+        time.sleep(1.0)
         vbus = read_vbus()
-        print("vbus with boost on: {}".format(vbus))
+        print("vbus with boost on (1): {}".format(vbus))
+        self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
+        vbus = read_vbus()
+        print("vbus with boost on (2a): {}".format(vbus))
+        time.sleep(1.0)
+        vbus = read_vbus()
+        print("vbus with boost on (2b): {}".format(vbus))
 
         if vbus < 4.5:
             self.passing = False
