@@ -1,5 +1,7 @@
 #!/usr/bin/expect
 
+source menu.expect
+
 set timeout 600
 set passing 0
 
@@ -14,50 +16,36 @@ exec echo 1 > /sys/class/gpio/gpio24/value
 
 expect {
     -re {\_\|TT\|\_PDDB.SKIPMOUNT,.*\_\|TE\|\_} {
-	# "unplug" the device, so it can self-reboot at the end
-	# ASSUME: all the GPIOs are setup upstream
-	exec echo 0 > /sys/class/gpio/gpio21/value
-	after 500
+		# "unplug" the device, so it can self-reboot at the end
+		# ASSUME: all the GPIOs are setup upstream
+		exec echo 0 > /sys/class/gpio/gpio21/value
+		after 500
 
-	# raise home menu, select "init root keys"
-	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-	after 150
-	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
-	after 150
-	exp_continue -continue_timer
+		# raise home menu, select "init root keys"
+		menu_select
+		after 300
+		menu_down 3
+		menu_select
+		exp_continue -continue_timer
     }
     -re {\_\|TT\|\_ROOTKEY.CONFIRM,.*\_\|TE\|\_} {
-	# confirm to proceed
-
-	# extra time to allow menu to draw
-	after 500
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-        after 150
-	exec bash -c {echo -n -e $'\e'\[B > /dev/ttyS0}
-        after 150
-	exec bash -c {echo -n -e $'\e'\[1~ > /dev/ttyS0}
-	exp_continue -continue_timer
+		# confirm to proceed
+		# extra time to allow menu to draw
+		after 500
+		menu_down 2
+		menu_select
+		exp_continue -continue_timer
     }
     -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
-	# enter a boot password
-	after 500
-	exec echo -n -e "test\r" > /dev/ttyS0
+		# enter a boot password
+		after 500
+		exec echo -n -e "test\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_ROOTKEY.UPDPW,.*\_\|TE\|\_} {
-	# enter the update password
-	after 500
-	exec echo -n -e "4 <ng>r_P@sw0rd\r" > /dev/ttyS0
+		# enter the update password
+		after 500
+		exec echo -n -e "4 <ng>r_P@sw0rd\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_ROOTKEY.INITDONE,.*\_\|TE\|\_} {
@@ -69,30 +57,29 @@ expect {
 set timeout 45
 expect {
     "Signature check failed; powering down" {
-	puts "***NOTE: SoC auto-reload failed"
-	puts "This is a known bug and the workaround is 'inserting the paperclip' to reload SoC (see issue #114)"
-	# this is the equivalent of inserting the paperclip
-	after 200
-	exec echo 0 > /sys/class/gpio/gpio24/value
-	after 200
-	exec echo 1 > /sys/class/gpio/gpio24/value
-	exp_continue -continue_timer
+		puts "***NOTE: SoC auto-reload failed"
+		puts "This is a known bug and the workaround is 'inserting the paperclip' to reload SoC (see issue #114)"
+		# this is the equivalent of inserting the paperclip
+		after 200
+		exec echo 0 > /sys/class/gpio/gpio24/value
+		after 200
+		exec echo 1 > /sys/class/gpio/gpio24/value
+		exp_continue -continue_timer
     }
     -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
-	# enter a boot password
-	after 500
-	exec echo -n -e "test\r" > /dev/ttyS0
+		# enter a boot password
+		after 500
+		exec echo -n -e "test\r" > /dev/ttyS0
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.REQFMT,.*\_\|TE\|\_} {
-	puts "At PDDB request format"
-	set passing 1
+		puts "At PDDB request format"
+		set passing 1
     }
-}    
+}
 
 if { $passing == 1 } {
     exit 0
 } else {
     exit 1
 }
-    

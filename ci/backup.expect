@@ -1,0 +1,127 @@
+#!/usr/bin/expect
+
+source menu.expect
+
+set timeout 180
+
+# ASSUME: power is on
+# ASSUME: tty speed set by upstream script
+spawn -open [open /dev/ttyS0 w+]
+# ASSUME: reset is setup
+after 500
+exec echo 0 > /sys/class/gpio/gpio24/value
+after 200
+exec echo 1 > /sys/class/gpio/gpio24/value
+
+set gotntp 0
+expect {
+    -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
+		# enter the boot password
+		after 500
+		exec echo -n -e "test\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_NET.OK,.*\_\|TE\|\_} {
+		# select set time menu entry. This may have to change if "Enable audio subsystem" behavior changes
+		after 500
+		menu_select
+		after 300
+		menu_down 2
+		menu_select
+		menu_up 4
+		menu_select
+		after 150
+		exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_RTC.TZ,.*\_\|TE\|\_} {
+		# set the timezone to UTC+8
+		after 500
+		exec echo -n -e "8\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_RTC.NTP,.*\_\|TE\|\_} {
+		# select "yes" when asked if we want to use NTP
+		after 500
+		menu_down 2
+		menu_select
+		after 150
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_RTC.NTPFAIL,.*\_\|TE\|\_} {
+		puts "NTP failed"
+		set gotntp 0
+    }
+    -re {\_\|TT\|\_RTC.NTPOK,.*\_\|TE\|\_} {
+		puts "NTP succeeded"
+		set gotntp 1
+    }
+
+}
+if { $gotntp == 0 } {
+    puts "Couldn't set time; backup will fail"
+    exit 1
+}
+
+# scroll up to select creating a backup, counting on menu wrap-around
+set timeout 240
+after 8000
+puts "Starting backup process"
+menu_select
+after 500
+menu_up 4
+menu_select
+
+expect {
+    -re {\_\|TT\|\_BACKUP.CONFIRM,.*\_\|TE\|\_} {
+		# select "yes" on the backup confirmation screen
+		after 1000
+		menu_down 2
+		menu_select
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_ROOTKEY.UPDPW,.*\_\|TE\|\_} {
+		exec echo -n -e "4 <ng>r_P@sw0rd\r" > /dev/ttyS0
+		# ample time for the backup to prep
+		after 9000
+		# space bar to dismiss the bip-39 display
+		exec echo -n -e " " > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_ROOTKEY.CONFIRM,.*\_\|TE\|\_} {
+		# dismiss the check bip-39 routine by selecting "no"
+		after 2000
+		menu_down 1
+        after 300
+		menu_select
+        after 300
+		menu_down 1
+        after 300
+		menu_select
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_BACKUP.STAGED,.*\_\|TE\|\_} {
+	# 10 seconds for the backup postamble complete -- should be enough!
+        after 10000
+	puts "Backup prepared, running backup process..."
+    }
+}
+
+# takes about 7-8 minutes on the Pi
+exec rm -f /mnt/ramdisk/backup.pddb
+
+set timeout 1000
+# this script needs to be placed in this directory by the CI system
+# we don't check it into VCS because it would be out of sync with the
+# actual version that's in the xous kernel tools directory. instead,
+# an scp operation is used by jenkins to stage it from the latest version.
+if {[catch {exec ./backup.py --output /mnt/ramdisk/backup.pddb} errmsg]} {
+    puts "Backup exited with non-zero status but that is expected: $errmsg"
+}
+
+after 1000
+
+puts "Backup script finished"
+
+after 1000
+
+exit 0

@@ -39,7 +39,7 @@ class Test(BaseTest):
         
     def run(self, oled):
         global VIBE_HAPPENED
-        BOOT_WAIT_SECS = 9.0  # time to wait for a boot to happen before issuing commands
+        BOOT_WAIT_SECS = 9.0  # time to wait for a boot to finish before issuing commands
         
         self.passing = True
         self.has_run = True
@@ -104,7 +104,7 @@ class Test(BaseTest):
         self.console.send("\x1b[B"); # pointer on ok
         time.sleep(0.4)
         self.console.send("\x1b[1~"); # select
-        
+
         # wait for boot to finish
         try:
             self.console.expect_exact("|status: starting main loop", 30)
@@ -119,14 +119,25 @@ class Test(BaseTest):
         with canvas(oled) as draw:
             draw.text((0, 0), "Selftest / Boost...", fill="white")
         vbus = read_vbus()
-        #print("vbus before: {}", vbus)
+        print("vbus before boost msmnt: {}".format(vbus))
         if vbus > 1.0:
             self.passing = False
             self.add_reason("VBUS leakage (boost mode Q14P)")
-            
+
+        # unclear why the first command is not issuing. I think this is not a hardware problem,
+        # as it was working just fine for a couple of years. My guess is power on init got busy
+        # enough that the COM bus may be too busy to accept the command immediately on boot.
+        # Issue the command twice as a work-around so the factory test can proceed.
         self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
-        time.sleep(1)
+        time.sleep(1.0)
         vbus = read_vbus()
+        print("vbus with boost on (1): {}".format(vbus))
+        self.try_cmd("test booston\r", "|TSTR|BOOSTON", timeout=10)
+        vbus = read_vbus()
+        print("vbus with boost on (2a): {}".format(vbus))
+        time.sleep(1.0)
+        vbus = read_vbus()
+        print("vbus with boost on (2b): {}".format(vbus))
 
         if vbus < 4.5:
             self.passing = False
