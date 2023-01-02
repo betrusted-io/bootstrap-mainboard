@@ -19,7 +19,7 @@ import math
 
 
 SAMPLE_RATE = 8000.0
-ANALYSIS_DELTA = 10.0
+ANALYSIS_DELTA = 20.0 # wider window because cos generation is approximate (originally 10.0Hz)
 def analyze(spectrum, target):
     total_power = 0.0
     h1_power = 0.0
@@ -64,7 +64,7 @@ def ascii_plot(spectrum, logfile):
             label = freq
         index += 1
         if index % SLOTS_PER_BIN == 0:
-            logfile.write('{:6.1f} '.format(label) + '*' * (int(total_power * norm)))
+            logfile.write('{:6.1f} '.format(label) + '*' * (int(total_power * norm)) + '\n')
             total_power = 0.0
         if freq > 700.0:
             break
@@ -72,7 +72,7 @@ def ascii_plot(spectrum, logfile):
 def extract_samples(raw_data):
     samples = bytearray()
     index = 0
-    for line in raw_data.split('\n'): # \r on actual host
+    for line in raw_data.split('\r'):
         if 'TSTR|' in line:
             parse = line.split('|')
             if int(parse[3]) != index:
@@ -95,7 +95,9 @@ def extract_samples(raw_data):
 def fft(signal):
     data = np.fft.rfft(signal)
     data = data[:-1]
-    #data = np.log10(np.sqrt(np.real(data)**2 + np.imag(data)**2) / n) * 10
+    # for dB
+    # data = np.log10(np.sqrt(np.real(data)**2 + np.imag(data)**2) / n) * 10
+    # for linear
     data = np.sqrt(np.real(data)**2 + np.imag(data)**2) / len(data)
 
     results = {}
@@ -126,17 +128,18 @@ class Test(BaseTest):
         signal = extract_samples(results)
         spectrum = fft(signal)
         ratio = analyze(spectrum, target_freq)
-        self.logfile.write("Power ratio @ {}Hz: {}".format(target_freq, ratio))
+        self.logfile.write("Power ratio @ {}Hz: {}\n".format(target_freq, ratio))
         db = db_compute(signal)
-        self.logfile.write("dB: {}".format(db))
+        self.logfile.write("dB: {}\n".format(db))
         ascii_plot(spectrum, self.logfile)
         # Power ratio typical range 0.35 (speaker) to 3.5 (headphones)
-        # speaker has a wider spectrum because we don't have a filter on the PWM, so there are sampling issues feeding it back into the mic
+        # speaker has a wider spectrum because we don't have a filter on the PWM,
+        # so there are sampling issues feeding it back into the mic
         # db typical <10 (silence) to 78 (full amplitude)
-        if (ratio > 0.25) & (db > 60.0):
-            True
+        if (ratio > 0.25) and (db > 60.0):
+            return True
         else:
-            False
+            return False
 
     def run(self, oled):
         self.passing = True
@@ -166,6 +169,10 @@ class Test(BaseTest):
             exit(1)
         self.console = fdspawn(ser)
 
+        # Uncomment these lines when testing a provisioned unit that already has a PDDB setup
+        # self.slow_send("test\r") # enters password
+        # time.sleep(6) # waits for mount
+        
         # setup for left feed
         GPIO.output(GPIO_AUD_HPR, 0)
         GPIO.output(GPIO_AUD_HPL, 1)
@@ -178,7 +185,7 @@ class Test(BaseTest):
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
         results = self.console.before.decode('utf-8', errors='ignore')
-        if ~self.automate_analysis(results, 261.63):
+        if self.automate_analysis(results, 261.63) is False:
             self.passing = False
             self.add_reason("Left audio fail")
 
@@ -194,7 +201,7 @@ class Test(BaseTest):
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
         results = self.console.before.decode('utf-8', errors='ignore')
-        if ~self.automate_analysis(results, 329.63):
+        if self.automate_analysis(results, 329.63) is False:
             self.passing = False
             self.add_reason("Right audio fail")
 
@@ -210,7 +217,7 @@ class Test(BaseTest):
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
         results = self.console.before.decode('utf-8', errors='ignore')
-        if ~self.automate_analysis(results, 440.0):
+        if self.automate_analysis(results, 440.0) is False:
             self.passing = False
             self.add_reason("Speaker fail")
 
@@ -226,7 +233,7 @@ class Test(BaseTest):
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
         results = self.console.before.decode('utf-8', errors='ignore')
-        if self.automate_analysis(results, 523.25):  # we expect this test to FAIL; should be silence in this config
+        if self.automate_analysis(results, 523.25) is True:  # we expect this test to FAIL; should be silence in this config
             self.passing = False
             self.add_reason("L/R isolation fail")
 
