@@ -13,6 +13,98 @@ from pexpect.fdpexpect import fdspawn
 import serial
 import ast
 
+import base64
+import numpy as np
+import math
+
+
+SAMPLE_RATE = 8000.0
+ANALYSIS_DELTA = 10.0
+def analyze(spectrum, target):
+    total_power = 0.0
+    h1_power = 0.0
+    h2_power = 0.0
+    outside_power = 0.0
+    for (freq, power) in spectrum.items():
+        total_power += power
+        if (freq >= (target - ANALYSIS_DELTA)) & (freq <= (target + ANALYSIS_DELTA)):
+            h1_power += power
+        elif (freq >= (target * 2.0 - ANALYSIS_DELTA)) & (freq <= (target * 2.0 + ANALYSIS_DELTA)):
+            h2_power += power
+        else:
+            outside_power += power
+    if outside_power > 0.0:
+        ratio = (h1_power + h2_power) / outside_power
+    else:
+        1_000_000.0
+    return ratio
+
+def db_compute(samples):
+    cum = 0.0
+    for sample in samples:
+        cum += sample
+    mid = cum / float(len(samples))
+    cum = 0.0
+    for sample in samples:
+        a = sample - mid
+        cum += (a * a)
+    cum /= float(len(samples))
+    db = 10.0 * math.log10(cum)
+    return db
+
+def ascii_plot(spectrum, logfile):
+    SLOTS_PER_BIN=20
+    label = 0.0
+    total_power = 0.0
+    index = 0
+    norm = 40.0 / max(spectrum.values())
+    for (freq, power) in spectrum.items():
+        total_power += power
+        if index % SLOTS_PER_BIN == SLOTS_PER_BIN // 2:
+            label = freq
+        index += 1
+        if index % SLOTS_PER_BIN == 0:
+            logfile.write('{:6.1f} '.format(label) + '*' * (int(total_power * norm)))
+            total_power = 0.0
+        if freq > 700.0:
+            break
+
+def extract_samples(raw_data):
+    samples = bytearray()
+    index = 0
+    for line in raw_data.split('\n'): # \r on actual host
+        if 'TSTR|' in line:
+            parse = line.split('|')
+            if int(parse[3]) != index:
+                print("Warning: base64 index out of sync\n")
+            samples += base64.b64decode(parse[4])
+            index += 1
+            if index == 32:
+                break
+    if index != 32:
+        print("Warning: missing audio data\n")
+
+    right_samps = []
+    for i in range(0, len(samples), 2):
+        if i % 4 == 0:
+            right_samps.append(float(int.from_bytes(samples[i:i+2], 'little', signed=True)))
+
+    signal = np.array(right_samps, dtype=float)
+    return(signal)
+
+def fft(signal):
+    data = np.fft.rfft(signal)
+    data = data[:-1]
+    #data = np.log10(np.sqrt(np.real(data)**2 + np.imag(data)**2) / n) * 10
+    data = np.sqrt(np.real(data)**2 + np.imag(data)**2) / len(data)
+
+    results = {}
+    freq = 0.0
+    for d in data:
+        results[freq] = d
+        freq += SAMPLE_RATE * 0.5 / float(len(data))
+    return results
+
 class Test(BaseTest):
     def __init__(self):
         BaseTest.__init__(self, name="Audio Test", shortname="Audio")
@@ -29,7 +121,23 @@ class Test(BaseTest):
         except Exception as e:
             self.passing = False
             self.add_reason(cmd.strip())
-        
+
+    def automate_analysis(self, results, target_freq):
+        signal = extract_samples(results)
+        spectrum = fft(signal)
+        ratio = analyze(spectrum, target_freq)
+        self.logfile.write("Power ratio @ {}Hz: {}".format(target_freq, ratio))
+        db = db_compute(signal)
+        self.logfile.write("dB: {}".format(db))
+        ascii_plot(spectrum, self.logfile)
+        # Power ratio typical range 0.35 (speaker) to 3.5 (headphones)
+        # speaker has a wider spectrum because we don't have a filter on the PWM, so there are sampling issues feeding it back into the mic
+        # db typical <10 (silence) to 78 (full amplitude)
+        if (ratio > 0.25) & (db > 60.0):
+            True
+        else:
+            False
+
     def run(self, oled):
         self.passing = True
         self.has_run = True
@@ -38,7 +146,7 @@ class Test(BaseTest):
             draw.text((0, 0), "Audio / Battery on...", fill="white")
         GPIO.output(GPIO_BSIM, 1)
         time.sleep(0.5)
-        
+
         with canvas(oled) as draw:
             draw.text((0, 0), "Audio / Power on...", fill="white")
         GPIO.output(GPIO_VBUS, 1)
@@ -56,13 +164,13 @@ class Test(BaseTest):
         except:
             print("couldn't open serial port")
             exit(1)
-        self.console = fdspawn(ser)        
+        self.console = fdspawn(ser)
 
         # setup for left feed
         GPIO.output(GPIO_AUD_HPR, 0)
         GPIO.output(GPIO_AUD_HPL, 1)
         GPIO.output(GPIO_AUD_SPK, 0)
-        
+
         with canvas(oled) as draw:
             draw.text((0, 0), "Test left audio channel...", fill="white")
         self.try_cmd("test astart 261.63 left\r", "|TSTR|ASTART")
@@ -70,23 +178,15 @@ class Test(BaseTest):
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
         results = self.console.before.decode('utf-8', errors='ignore')
-        for line in results.split('\r'):
-            if 'TSTR|' in line:
-                if self.logfile:
-                    self.logfile.write(line.rstrip() + '\n')
-                #print(line.rstrip())
-                test_output = line.split('|')
-                if test_output[2] == 'ARESULT':
-                    if test_output[3] == 'FAIL':
-                        self.passing = False
-                        self.add_reason("Left audio fail")
-        
+        if ~self.automate_analysis(results, 261.63):
+            self.passing = False
+            self.add_reason("Left audio fail")
 
         # setup for right feed
         GPIO.output(GPIO_AUD_HPR, 1)
         GPIO.output(GPIO_AUD_HPL, 0)
         GPIO.output(GPIO_AUD_SPK, 0)
-        
+
         with canvas(oled) as draw:
             draw.text((0, 0), "Test right audio channel...", fill="white")
         self.try_cmd("test astart 329.63 right\r", "|TSTR|ASTART")
@@ -94,23 +194,15 @@ class Test(BaseTest):
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
         results = self.console.before.decode('utf-8', errors='ignore')
-        for line in results.split('\r'):
-            if 'TSTR|' in line:
-                if self.logfile:
-                    self.logfile.write(line.rstrip() + '\n')
-                #print(line.rstrip())
-                test_output = line.split('|')
-                if test_output[2] == 'ARESULT':
-                    if test_output[3] == 'FAIL':
-                        self.passing = False
-                        self.add_reason("Right audio fail")
-        
-                        
+        if ~self.automate_analysis(results, 329.63):
+            self.passing = False
+            self.add_reason("Right audio fail")
+
         # setup for speaker feed
         GPIO.output(GPIO_AUD_HPR, 0)
         GPIO.output(GPIO_AUD_HPL, 0)
         GPIO.output(GPIO_AUD_SPK, 1)
-        
+
         with canvas(oled) as draw:
             draw.text((0, 0), "Test speaker...", fill="white")
         self.try_cmd("test astart 440 speaker\r", "|TSTR|ASTART")
@@ -118,22 +210,15 @@ class Test(BaseTest):
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
         results = self.console.before.decode('utf-8', errors='ignore')
-        for line in results.split('\r'):
-            if 'TSTR|' in line:
-                if self.logfile:
-                    self.logfile.write(line.rstrip() + '\n')
-                #print(line.rstrip())
-                test_output = line.split('|')
-                if test_output[2] == 'ARESULT':
-                    if test_output[3] == 'FAIL':
-                        self.passing = False
-                        self.add_reason("Speaker fail")
+        if ~self.automate_analysis(results, 440.0):
+            self.passing = False
+            self.add_reason("Speaker fail")
 
         # setup for right/left crosstalk
         GPIO.output(GPIO_AUD_HPR, 0)
         GPIO.output(GPIO_AUD_HPL, 1)
         GPIO.output(GPIO_AUD_SPK, 0)
-        
+
         with canvas(oled) as draw:
             draw.text((0, 0), "Test crosstalk...", fill="white")
         self.try_cmd("test astart 523.25 right\r", "|TSTR|ASTART")
@@ -141,23 +226,15 @@ class Test(BaseTest):
         self.try_cmd("test astop\r", "|TSTR|ASTOP")
 
         results = self.console.before.decode('utf-8', errors='ignore')
-        for line in results.split('\r'):
-            if 'TSTR|' in line:
-                if self.logfile:
-                    self.logfile.write(line.rstrip() + '\n')
-                #print(line.rstrip())
-                test_output = line.split('|')
-                if test_output[2] == 'ARESULT':
-                    if test_output[3] == 'PASS': # we expect this test to FAIL; should be silence in this config
-                        self.passing = False
-                        self.add_reason("L/R isolation fail")
-                        
+        if self.automate_analysis(results, 523.25):  # we expect this test to FAIL; should be silence in this config
+            self.passing = False
+            self.add_reason("L/R isolation fail")
 
         # isolate all
         GPIO.output(GPIO_AUD_HPR, 0)
         GPIO.output(GPIO_AUD_HPL, 0)
         GPIO.output(GPIO_AUD_SPK, 0)
-                        
+
         with canvas(oled) as draw:
             draw.text((0, 0), "Audio test complete!", fill="white")
         time.sleep(1)
@@ -166,4 +243,4 @@ class Test(BaseTest):
 
         self.console.close()
         return self.passing
-    
+
