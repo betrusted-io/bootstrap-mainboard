@@ -52,14 +52,18 @@ spawn bash -c {cd ../../CTAP2-test-tool/ && ./run.sh}
 set testbench $spawn_id
 
 set ignore_touch 0
+set waiting_enumerate 0
+set was_replug 0
 expect {
     ###### automation with the testbench driver
     -i $testbench "You have 10 seconds for the next touch after pressing enter." {
 		puts "Setting device_reset flag to 1"
 		set device_reset 1
+		set timeout 60
 		exp_continue
     }
     -i $testbench "Please replug the device, then hit enter." {
+	        set was_replug 1
 		puts "performing a reset"
 		set timeout 60
 		# this does a reset of the device
@@ -71,6 +75,7 @@ expect {
         exec ./shutdown.sh
         after 4000
         exec ./setup.sh
+	after 4000
 
 	exp_continue
     }
@@ -103,7 +108,7 @@ expect {
 			exit 1
 		}
     }
-
+    # KeyboardLedsReport
     ###### automation with the DUT
     -i $logger -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
 		# enter the boot password
@@ -117,9 +122,13 @@ expect {
 		exp_continue -continue_timer
     }
     -i $logger -re {\_\|TT\|\_USB.RESUME,.*\_\|TE\|\_} {
-		set gothost 1
-		after 1000
-
+                set waiting_enumerate 1
+  	        set timeout 60
+		exp_continue
+    }
+    -i $logger -re {KeyboardLedsReport} {
+       	set waiting_enumerate 0
+	if { $was_replug == 1 } {
 		# then hit enter on the CTAP test bench
 		after 3000
 		puts "Replug finished, hitting enter"
@@ -131,9 +140,24 @@ expect {
 			exec echo -n -e "y" > /dev/ttyS0
 			set device_reset 0
 		}
-		flush stdout
-		set timeout 600
-		exp_continue
+	}
+	flush stdout
+	set timeout 600
+	set was_replug 0
+	exp_continue
+    }
+    timeout {
+	if { $waiting_enumerate == 1 } {
+	    puts "Timeout while waiting for enumeration. Trying to enumerate again..."
+	    exec echo -n -e "usb debug\r" > /dev/ttyS0
+	    after 6000
+	    exec echo -n -e "usb hid\r" > /dev/ttyS0
+            set waiting_enumerate 1
+            set timeout 15
+	    exp_continue
+	} else {
+	    puts "Timeout, but not waiting for enumeration"
+	}
     }
 }
 
