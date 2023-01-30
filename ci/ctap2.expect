@@ -80,7 +80,7 @@ expect {
     #}
     -i $testbench "Please touch your security key!" {
 		if { $ignore_touch == 0 } {
-			after 1100
+			after 2000
 			puts "Sending 'y'"
 			exec echo -n -e "y" > /dev/ttyS0
 			exp_continue
@@ -141,10 +141,10 @@ expect {
 		puts "Replug finished, hitting enter"
 		send -i $testbench \r
 		if { $device_reset == 1 } {
-			after 5000
-			puts "Confirming device reset, per production spec"
-			puts "Sending 'y'"
-			exec echo -n -e "y" > /dev/ttyS0
+		#	after 5000
+		#	puts "Confirming device reset, per production spec"
+		#	puts "Sending 'y'"
+		#	exec echo -n -e "y" > /dev/ttyS0
 			set device_reset 0
 		}
 	}
