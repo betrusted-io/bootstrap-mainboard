@@ -18,7 +18,7 @@ import subprocess
 try:
     import numpy as np
 except:
-    p = subprocess.Popen(["sudo", "apt", "install", "python3-numpy"])
+    p = subprocess.Popen(["sudo", "apt-get", "-y", "install", "python3-numpy"])
     p.wait()
 finally:
     import numpy as np
