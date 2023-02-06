@@ -14,6 +14,7 @@ import serial
 import ast
 
 import base64
+import subprocess
 try:
     import numpy as np
 except:
