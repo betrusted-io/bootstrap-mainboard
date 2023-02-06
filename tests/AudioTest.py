@@ -14,7 +14,12 @@ import serial
 import ast
 
 import base64
-import numpy as np
+try:
+    import numpy as np
+except:
+    subprocess.Popen(["sudo", "/usr/bin/pip3", "install", "numpy"])
+finally:
+    import numpy as np
 import math
 
 
