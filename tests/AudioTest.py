@@ -18,7 +18,8 @@ import subprocess
 try:
     import numpy as np
 except:
-    subprocess.Popen(["sudo", "/usr/bin/pip3", "install", "numpy"])
+    p = subprocess.Popen(["sudo", "/usr/bin/pip3", "install", "numpy"])
+    p.wait()
 finally:
     import numpy as np
 import math
