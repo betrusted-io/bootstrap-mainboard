@@ -314,7 +314,10 @@ def do_update():
     # would also be nice to relay the subprocess.run() outputs to the screen somehow for review & confirmation
     # and also finally end with a screen that shows the sha2sum of the main script plus key files, so
     # that the factory can take a photo of it and I can confirm things are in fact up to date.
-     
+
+    do_update_cmd(['git', 'config', '--global', 'url."https://github.com/".insteadOf', 'git@github.com:'])
+    do_update_cmd(['git', 'config', '--global', 'url."https://".insteadOf', 'git://'])
+    
     # checkout the main branch
     do_update_cmd(['git', 'checkout', 'main'], timeout=5)
     
