@@ -332,6 +332,14 @@ def do_update():
     time.sleep(3)
     
     # merge into the branch
+    # remove off-target remotes, if they exist: this will distract the submodule update and cause it to look for a password, which doesn't exist!
+    submod_dirs = [
+         '/home/pi/code/bootstrap-mainboard/betrusted-scripts',
+         '/home/pi/code/bootstrap-mainboard/betrusted-scripts/jtag-tools',
+         '/home/pi/code/bootstrap-mainboard/fomu-flash',
+    ]
+    for dir in submod_dirs:
+         do_update_cmd(['git', 'remote', 'remove', 'betrusted'], cwd=dir)
     do_update_cmd(['git', 'submodule', 'update', '--recursive'], timeout=60)
     time.sleep(3)
 
