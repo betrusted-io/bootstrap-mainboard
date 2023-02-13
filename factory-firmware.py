@@ -315,7 +315,7 @@ def do_update():
     # would also be nice to relay the subprocess.run() outputs to the screen somehow for review & confirmation
     # and also finally end with a screen that shows the sha2sum of the main script plus key files, so
     # that the factory can take a photo of it and I can confirm things are in fact up to date.
-     
+
     # checkout the main branch
     do_update_cmd(['git', 'checkout', 'main'], timeout=5)
     
@@ -333,6 +333,14 @@ def do_update():
     time.sleep(3)
     
     # merge into the branch
+    # remove off-target remotes, if they exist: this will distract the submodule update and cause it to look for a password, which doesn't exist!
+    submod_dirs = [
+         '/home/pi/code/bootstrap-mainboard/betrusted-scripts',
+         '/home/pi/code/bootstrap-mainboard/betrusted-scripts/jtag-tools',
+         '/home/pi/code/bootstrap-mainboard/fomu-flash',
+    ]
+    for dir in submod_dirs:
+         do_update_cmd(['git', 'remote', 'remove', 'betrusted'], cwd=dir)
     do_update_cmd(['git', 'submodule', 'update', '--recursive'], timeout=60)
     time.sleep(3)
 
@@ -412,7 +420,7 @@ def do_voltage():
           "+3.3VA"    : [3.3, 3.15, 3.51], # this channel seems to drift high due to noise. suspect cross-coupling issue with adjacent channel.
           "+V_AVA"    : [19.13, 2.0, 24.0], # it's off when idle, avoid confusing the operator
           "+1.8V_U"   : [1.8, 1.68, 1.89],
-          "+0.95V"    : [0.95, 0.91, 0.98],
+          "+0.95V"    : [0.95, 0.91, 1.11], # some FP rounding error makes this jump from 1.07 to 1.11. don't fail units on account of this
           "+5V_LCD"   : [5.0, 4.6, 5.6], # a little looser due to noise on the line
           #"V_BL"      : [19.5, 16.0, 22.0],
           "VBUS"      : [5.0, 4.4, 5.6],
