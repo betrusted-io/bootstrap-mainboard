@@ -7,7 +7,7 @@ set expected_min 9
 
 set expected_soc_rev 11
 set expected_xous_rev 12
-set expected_ec_rev 9
+set expected_ec_rev 12
 
 set timeout 45
 
