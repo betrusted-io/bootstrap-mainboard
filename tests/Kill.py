@@ -67,9 +67,23 @@ class Test(BaseTest):
         self.console.close()
 
         with canvas(oled) as draw:
+            draw.text((0, 1), "Measuring kill current...", fill="white")
+
+        time.sleep(2.0) # time for commnad to issue
+
+        # issuing a reset on the EC should cause it to cycle the backlight off
+        GPIO.setup(GPIO_CRESET_N, GPIO.OUT)
+        GPIO.output(GPIO_CRESET_N, 0)
+        with canvas(oled) as draw:
+            draw.text((0, 0), "Reset EC to turn off backlight...", fill="white")
+        time.sleep(1.0)
+        GPIO.output(GPIO_CRESET_N, 1)
+        GPIO.setup(GPIO_CRESET_N, GPIO.IN)
+
+        with canvas(oled) as draw:
             draw.text((0, 1), "A red light should be turned on.", fill="white")
 
-        time.sleep(10.0) # increased to 10 seconds because of the backlight dim timeout variance
+        time.sleep(7.0) # wait for backlight to turn off
         destruct_current = read_i_bat(high_range=True)
         if destruct_current > 0.095:
             self.passing = False

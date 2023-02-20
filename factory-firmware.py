@@ -6,6 +6,7 @@ Factory test script for the firmware-only burning station
 Notes included here so that the hash of the top-level file changes.
 
 - Update 2/20/23 - sub-test Kill.py increased timeout margin for backlight dimming timing variance
+- Update 2/20/23 - add EC reset to kill test so that the backlight turns off allowing us to measure idle current
 """
 
 import time # for sleep and timestamps
@@ -69,6 +70,7 @@ def get_tests():
     else:
        #tests.append(SocFirmware.Test())
        tests.append(SelfTest.Test())
+       #tests.append(AudioTest.Test())
        #tests.append(AudioBurn.Test())
        #tests.append(Kill.Test())
     
