@@ -7,6 +7,7 @@ Notes included here so that the hash of the top-level file changes.
 
 - Update 2/20/23 - sub-test Kill.py increased timeout margin for backlight dimming timing variance
 - Update 2/20/23 - add EC reset to kill test so that the backlight turns off allowing us to measure idle current
+- Update 2/20/23 - revert EC reset and fall back to updated Xous to turn off backlight
 """
 
 import time # for sleep and timestamps
