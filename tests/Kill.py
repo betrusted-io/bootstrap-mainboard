@@ -69,7 +69,7 @@ class Test(BaseTest):
         with canvas(oled) as draw:
             draw.text((0, 1), "A red light should be turned on.", fill="white")
 
-        time.sleep(5.0)
+        time.sleep(10.0) # increased to 10 seconds because of the backlight dim timeout variance
         destruct_current = read_i_bat(high_range=True)
         if destruct_current > 0.095:
             self.passing = False

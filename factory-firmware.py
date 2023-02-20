@@ -2,6 +2,10 @@
 
 """
 Factory test script for the firmware-only burning station
+
+Notes included here so that the hash of the top-level file changes.
+
+- Update 2/20/23 - sub-test Kill.py increased timeout margin for backlight dimming timing variance
 """
 
 import time # for sleep and timestamps
