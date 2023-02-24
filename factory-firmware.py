@@ -70,7 +70,7 @@ def get_tests(short_test=False):
        tests.append(Kill.Test())
     else:
        #tests.append(SocFirmware.Test())
-       tests.append(SoCOnly.Test(fpga="precursors/stress_soc_csr.bin"))
+       tests.append(SocFirmware.Test(fpga="precursors/stress_soc_csr.bin", kernel="precursors/stress-xous.img"))
        tests.append(SelfTest.Test())
        tests.append(Kill.Test())
        #tests.append(AudioTest.Test())
