@@ -15,4 +15,5 @@ __all__ = ["BaseTest",
            "Zero",
            "Kill",
            "OqcUpdate",
+           "SoCOnly",
           ]

@@ -1,0 +1,94 @@
+#!/usr/bin/expect
+
+# need to have the benchmark image programmed in
+# cd ../betrusted-scripts/jtag-tools
+# ./jtag_gpio.py -f ../../precursors/stress-xous.img --raw-binary -a 0x980000 -s -r -n
+# stress-image should be generated with
+# cargo xtask app-image --feature aestests --feature benchmarks --feature smalldb
+source menu.expect
+
+set timeout 60
+
+# ASSUME: power is on
+# ASSUME: tty speed set
+spawn -open [open /dev/ttyS0 w+]
+# ASSUME: reset is setup
+after 500
+exec echo 0 > /sys/class/gpio/gpio24/value
+after 200
+exec echo 1 > /sys/class/gpio/gpio24/value
+
+set index 0
+set fails 0
+set passes 0
+
+array set benches {
+    0 "aes hwbench\r"
+    1 "aes swbench\r"
+    2 "engine wycheproof\r"
+    3 "engine benchdh\r"
+    4 "sha hwbench\r"
+    5 "sha hwbench\r"
+    6 "sha swbench\r"
+}
+
+expect {
+    -re {\_\|TT\|\_ROOTKEY.INITQ3,.*\_\|TE\|\_} {
+	puts "disabling rootkey init question on boot"
+	after 500
+        menu_down 2
+	# don't ask again
+        menu_select
+        menu_down 1
+        menu_select
+	exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
+	# enter the boot password
+	after 500
+	exec echo -n -e "test\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_PDDB.SKIPMOUNT,.*\_\|TE\|\_} {
+	# start the benchmarks
+	after 3000
+	set cmd $benches($index)
+	exec echo -n -e $cmd > /dev/ttyS0
+	exp_continue
+    }
+    -re {\_\|TT\|\_NET.OK,.*\_\|TE\|\_} {
+	# start the benchmarks
+	after 3000
+	set cmd $benches($index)
+	exec echo -n -e $cmd > /dev/ttyS0
+	exp_continue
+    }
+    -re {\_\|TT\|\_BENCH,.*\_\|TE\|\_} {
+        set benchresult [split $expect_out(0,string) ","]
+	if {[lindex $benchresult 2] eq "FAIL"} {
+	    incr fails
+	} else {
+	    incr passes
+	}
+        incr index
+	#puts "Next test index $index"
+	#set arrsize [array size benches]
+	#puts "test array size $arrsize"
+	if { $index eq [array size benches] } {
+	    puts "No more tests"
+	} else {
+	    after 1000
+	    set cmd $benches($index)
+	    exec echo -n -e $cmd > /dev/ttyS0
+	    exp_continue
+	}
+    }    
+}
+
+if { $fails ne 0 } {
+    puts "Fails detected: $fails, passes: $passes"
+    exit 1
+} else {
+    puts "All benches passed: $passes"
+    exit 0
+}

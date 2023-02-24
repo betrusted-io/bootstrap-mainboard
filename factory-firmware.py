@@ -52,12 +52,12 @@ logfile=None
 from tests import *
 from tests.BaseTest import BaseTest
 
-def get_tests():
+def get_tests(short_test=False):
     tests = []
     #tests.append(Zero.Test())
     tests.append(PowerOn.Test())
     
-    if True:
+    if short_test is False:
        tests.append(FpgaId.Test())
        tests.append(EcFirmware.Test())
 
@@ -70,7 +70,9 @@ def get_tests():
        tests.append(Kill.Test())
     else:
        #tests.append(SocFirmware.Test())
+       tests.append(SoCOnly.Test(fpga="precursors/stress_soc_csr.bin"))
        tests.append(SelfTest.Test())
+       tests.append(Kill.Test())
        #tests.append(AudioTest.Test())
        #tests.append(AudioBurn.Test())
        #tests.append(Kill.Test())
@@ -608,6 +610,9 @@ def main():
     parser.add_argument(
          "--ci", help="Immediately run the test in CI mode", default=False, action="store_true"
     )
+    parser.add_argument(
+         "--short", help="Run an abridged test", default=False, action="store_true"
+    )
     args = parser.parse_args()
 
     if args.stdout:
@@ -643,7 +648,7 @@ def main():
     
     GPIO.add_event_detect(GPIO_FUNC, GPIO.FALLING, callback=abort_callback)
 
-    tests = get_tests()
+    tests = get_tests(args.short)
     
     loops = 0
     oled.show()
