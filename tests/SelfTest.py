@@ -398,7 +398,7 @@ class Test(BaseTest):
         if ibat_sus > 0.040: # about a 0.020 offset measured on testjig #1
             self.passing = False
             self.add_reason("Suspend leakage high {}mA".format(ibat_sus * 1000))
-        if ibat_post < 0.120:
+        if ibat_post < 0.120: # consider making this 0.8 * ibat_nom? so the target moves with the baseline....
             self.passing = False
             self.add_reason("System did not resume as expected")
             
