@@ -1,0 +1,1 @@
+Minimum current is set in two places: PowerOff.py as ibat_min, and SelfTest.py as ibat_post.
