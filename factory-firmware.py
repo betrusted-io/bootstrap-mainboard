@@ -431,7 +431,7 @@ def do_voltage():
           "+3.3VA"    : [3.3, 3.15, 3.51], # this channel seems to drift high due to noise. suspect cross-coupling issue with adjacent channel.
           "+V_AVA"    : [19.13, 2.0, 24.0], # it's off when idle, avoid confusing the operator
           "+1.8V_U"   : [1.8, 1.68, 1.89],
-          "+0.95V"    : [0.95, 0.91, 1.11], # some FP rounding error makes this jump from 1.07 to 1.11. don't fail units on account of this
+          "+0.95V"    : [0.95, 0.91, 0.99],
           "+5V_LCD"   : [5.0, 4.6, 5.6], # a little looser due to noise on the line
           #"V_BL"      : [19.5, 16.0, 22.0],
           "VBUS"      : [5.0, 4.4, 5.6],
