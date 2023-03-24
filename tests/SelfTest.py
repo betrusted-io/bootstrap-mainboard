@@ -182,7 +182,9 @@ class Test(BaseTest):
                         self.add_reason("U14W Gyro fail")
                 if test_output[2] == 'WF200REV':
                     tests_seen.append(test_output[2])
-                    if int(test_output[3]) != 3 or int(test_output[4]) != 12 or int(test_output[5]) != 3:
+                    # accept multiple FW revs, depends on the FW release that was put on the tester!
+                    if (int(test_output[3]) != 3 or int(test_output[4]) != 12 or int(test_output[5]) != 3) \
+                    and (int(test_output[3]) != 3 or int(test_output[4]) != 16 or int(test_output[5]) != 0) :
                         self.passing = False
                         self.add_reason("U10W WF200 fw rev fail")
                 if test_output[2] == 'BATTSTATS':
