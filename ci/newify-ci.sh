@@ -34,6 +34,11 @@ cd ..
 echo "erasing EC flash"
 sudo fomu-flash/fomu-flash -w precursors/blank.bin
 
+sleep 0.5
+
+echo "partially erasing WF200 area"
+sudo fomu-flash/fomu-flash -w precursors/blank.bin -a 0x9C000
+
 sleep 2
 
 echo "power off"
