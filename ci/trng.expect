@@ -1,0 +1,49 @@
+#!/usr/bin/expect
+
+set gothost 0
+
+# ASSUME: power is on
+# ASSUME: tty speed set by upstream script
+spawn -open [open /dev/ttyS0 w+]
+
+# ASSUME: reset is setup
+after 500
+exec echo 0 > /sys/class/gpio/gpio24/value
+after 200
+exec echo 1 > /sys/class/gpio/gpio24/value
+set timeout 40
+
+set trng_type [lindex $argv 0]
+
+expect {
+    -re {\_\|TT\|\_ROOTKEY.BOOTPW,.*\_\|TE\|\_} {
+	# enter the boot password
+	after 500
+	exec echo -n -e "test\r" > /dev/ttyS0
+        exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_PDDB.MOUNTED,.*\_\|TE\|\_} {
+	after 6000
+	exec echo -n -e "usb trng $trng_type\r" > /dev/ttyS0
+	exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_USB.RESUME,.*\_\|TE\|\_} {
+	set gothost 1
+	after 1000
+    }
+}
+if { $gothost == 1 } {
+    puts "Successfully reset and reconnected"
+    flush stdout
+} else {
+    puts "Failed to reset and reconnect"
+    flush stdout
+    exit 1
+}
+
+puts "Finished setting up USB TRNG to mode $trng_type"
+
+# can take ~1 hour to get 64MiB of random data
+# exec python3 ./getbin.py -n -s $data_amount
+
+
