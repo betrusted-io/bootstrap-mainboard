@@ -2,7 +2,7 @@
 
 source menu.expect
 
-set timeout 1500
+set timeout 1600
 set passing 0
 
 # ASSUME: power is on
@@ -53,14 +53,16 @@ expect {
         exp_continue -continue_timer
     }
     -re {\_\|TT\|\_PDDB.UNLOCKOK,.*\_\|TE\|\_} {
-		after 2000
-		# create some test data that should "stick around" for a long time
-		exec echo -n -e "pddb write testdict:testkey precursor_test_data\r" > /dev/ttyS0
-		after 1000
-		exec echo -n -e "pddb sync\r" > /dev/ttyS0
-		after 5000
-
-		set passing 1
+	after 2000
+	# create some test data that should "stick around" for a long time
+	exec echo -n -e "pddb write testdict:testkey precursor_test_data\r" > /dev/ttyS0
+	after 1000
+	exec echo -n -e "pddb sync\r" > /dev/ttyS0
+	after 5000
+	exp_continue -continue_timer
+    }
+    -re {\_\|TT\|\_PDDB.SYNCDONE,.*\_\|TE\|\_} {
+	set passing 1
     }
 }
 
