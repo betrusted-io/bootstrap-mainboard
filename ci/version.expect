@@ -4,9 +4,10 @@ source menu.expect
 
 set expected_maj 0
 set expected_min 9
+set expected_min_xous 10
 
 set expected_soc_rev 14
-set expected_xous_rev 16
+set expected_xous_rev 0
 set expected_ec_rev 15
 
 set timeout 45
@@ -99,7 +100,7 @@ if { $ecrev_maj == $expected_maj
      && $socrev_min == $expected_min
      && $socrev_rev == $expected_soc_rev
      && $xousrev_maj == $expected_maj
-     && $xousrev_min == $expected_min
+     && $xousrev_min == $expected_min_xous
      && $xousrev_rev == $expected_xous_rev } {
     exit 0
 } else {
